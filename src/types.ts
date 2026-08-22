@@ -9,6 +9,7 @@ export interface Hospital {
   distance?: number; // Calculated at runtime in km
   phone: string;
   specialties: string[];
+  services: string[];
   emergencyServices: boolean;
   bedsAvailable: number;
   bloodBank: boolean;
