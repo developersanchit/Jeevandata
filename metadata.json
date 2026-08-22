@@ -1,0 +1,10 @@
+{
+  "name": "Health Access Portal",
+  "description": "A centralized, reliable platform for emergency hospital discovery, verified doctor search, and blood donor matching based on open government APIs.",
+  "requestFramePermissions": [
+    "geolocation"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

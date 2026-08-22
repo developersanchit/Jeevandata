@@ -1,0 +1,114 @@
+import { Hospital } from './types';
+
+// Mock dataset representing the data.gov.in / ABDM HFR fallback data
+// Coordinates roughly around New Delhi (Connaught Place: 28.6304, 77.2177)
+export const MOCK_HOSPITALS: Hospital[] = [
+  {
+    id: 'hfr-001',
+    name: 'Safdarjung Hospital',
+    type: 'Government',
+    address: 'Ansari Nagar East, near AIIMS Metro Station, New Delhi',
+    phone: '+91-11-26165060',
+    specialties: ['Trauma', 'Cardiology', 'Neurology', 'Orthopedics'],
+    emergencyServices: true,
+    bedsAvailable: 42,
+    bloodBank: true,
+    lat: 28.5682,
+    lng: 77.2069,
+  },
+  {
+    id: 'hfr-002',
+    name: 'All India Institute of Medical Sciences (AIIMS)',
+    type: 'Government',
+    address: 'Sri Aurobindo Marg, Ansari Nagar, New Delhi',
+    phone: '+91-11-26588500',
+    specialties: ['Multispecialty', 'Trauma', 'Oncology', 'Cardiothoracic'],
+    emergencyServices: true,
+    bedsAvailable: 15,
+    bloodBank: true,
+    lat: 28.5672,
+    lng: 77.2100,
+  },
+  {
+    id: 'hfr-003',
+    name: 'Sir Ganga Ram Hospital',
+    type: 'Trust',
+    address: 'Rajinder Nagar, New Delhi',
+    phone: '+91-11-25750000',
+    specialties: ['Cardiology', 'Gastroenterology', 'Neurology'],
+    emergencyServices: true,
+    bedsAvailable: 8,
+    bloodBank: true,
+    lat: 28.6385,
+    lng: 77.1895,
+  },
+  {
+    id: 'hfr-004',
+    name: 'Dr. Ram Manohar Lohia Hospital',
+    type: 'Government',
+    address: 'Baba Kharak Singh Marg, New Delhi',
+    phone: '+91-11-23365525',
+    specialties: ['Trauma', 'Burn Ward', 'General Surgery'],
+    emergencyServices: true,
+    bedsAvailable: 64,
+    bloodBank: true,
+    lat: 28.6253,
+    lng: 77.2001,
+  },
+  {
+    id: 'hfr-005',
+    name: 'Fortis Escorts Heart Institute',
+    type: 'Private',
+    address: 'Okhla Road, New Friends Colony, New Delhi',
+    phone: '+91-11-47135000',
+    specialties: ['Cardiology', 'Cardiac Surgery'],
+    emergencyServices: true,
+    bedsAvailable: 3,
+    bloodBank: false,
+    lat: 28.5615,
+    lng: 77.2731,
+  },
+  {
+    id: 'hfr-006',
+    name: 'Lok Nayak Jai Prakash Narayan Hospital',
+    type: 'Government',
+    address: 'Jawaharlal Nehru Marg, New Delhi',
+    phone: '+91-11-23236000',
+    specialties: ['Trauma', 'Pediatrics', 'Orthopedics'],
+    emergencyServices: true,
+    bedsAvailable: 112,
+    bloodBank: true,
+    lat: 28.6378,
+    lng: 77.2405,
+  }
+];
+
+export const MOCK_BLOOD_BANKS = [
+  {
+    id: 'bb-001',
+    name: 'Indian Red Cross Society Blood Bank',
+    address: '1, Red Cross Road, New Delhi',
+    lat: 28.6212,
+    lng: 77.2045,
+    stock: { 'O+': 145, 'O-': 12, 'A+': 89, 'A-': 5, 'B+': 112, 'B-': 8, 'AB+': 45, 'AB-': 2 },
+    lastUpdated: '5 mins ago'
+  },
+  {
+    id: 'bb-002',
+    name: 'AIIMS Main Blood Bank',
+    address: 'Sri Aurobindo Marg, New Delhi',
+    lat: 28.5672,
+    lng: 77.2100,
+    stock: { 'O+': 45, 'O-': 2, 'A+': 30, 'A-': 0, 'B+': 55, 'B-': 1, 'AB+': 8, 'AB-': 0 },
+    lastUpdated: '12 mins ago'
+  },
+  {
+    id: 'bb-003',
+    name: 'Rotary Blood Bank',
+    address: 'Tughlakabad Institutional Area, New Delhi',
+    lat: 28.5134,
+    lng: 77.2612,
+    stock: { 'O+': 0, 'O-': 0, 'A+': 12, 'A-': 2, 'B+': 34, 'B-': 4, 'AB+': 15, 'AB-': 1 },
+    lastUpdated: '1 hour ago'
+  }
+];
