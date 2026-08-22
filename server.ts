@@ -14,6 +14,12 @@ async function startServer() {
   // ==========================================
   // API PROXY ROUTES
   // ==========================================
+  
+  // Health check endpoint (for cron jobs to keep the server awake on Render)
+  app.get("/api/health", (req, res) => {
+    res.status(200).json({ status: "ok", timestamp: new Date().toISOString() });
+  });
+
   // These routes act as a secure proxy. The browser calls /api/..., 
   // and this server attaches the secret API keys before calling the government APIs.
   
