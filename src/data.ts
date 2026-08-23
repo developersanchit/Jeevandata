@@ -1,4 +1,4 @@
-import { Hospital } from './types';
+import { Hospital, Doctor } from './types';
 
 // Mock dataset representing the data.gov.in / ABDM HFR fallback data
 // Coordinates roughly around New Delhi (Connaught Place: 28.6304, 77.2177)
@@ -201,3 +201,91 @@ export const MOCK_BLOOD_BANKS = [
     lastUpdated: '34 mins ago'
   }
 ];
+
+export const MOCK_DOCTORS: Doctor[] = [
+  {
+    id: 'doc-001',
+    name: 'Dr. Vikram Singh',
+    specialty: 'Cardiologist',
+    experience: 15,
+    qualification: 'MBBS, MD - Cardiology',
+    clinic: 'Heart Care Clinic',
+    address: 'Connaught Place, New Delhi',
+    fee: 1500,
+    rating: 4.8,
+    availableNext: 'Today, 4:00 PM',
+    lat: 28.6304,
+    lng: 77.2177,
+  },
+  {
+    id: 'doc-002',
+    name: 'Dr. Sneha Rao',
+    specialty: 'Dermatologist',
+    experience: 8,
+    qualification: 'MBBS, DDVL',
+    clinic: 'Skin Glow Clinic',
+    address: 'Rajinder Nagar, New Delhi',
+    fee: 800,
+    rating: 4.5,
+    availableNext: 'Tomorrow, 10:00 AM',
+    lat: 28.6385,
+    lng: 77.1895,
+  },
+  {
+    id: 'doc-003',
+    name: 'Dr. Aarti Sharma',
+    specialty: 'Pediatrician',
+    experience: 12,
+    qualification: 'MBBS, MD - Pediatrics',
+    clinic: 'Little Smiles Care',
+    address: 'Green Park, New Delhi',
+    fee: 1000,
+    rating: 4.9,
+    availableNext: 'Today, 2:30 PM',
+    lat: 28.5562,
+    lng: 77.2065,
+  },
+  {
+    id: 'doc-004',
+    name: 'Dr. Rahul Verma',
+    specialty: 'Orthopedic',
+    experience: 20,
+    qualification: 'MBBS, MS - Orthopedics',
+    clinic: 'Bone & Joint Centre',
+    address: 'Vasant Kunj, New Delhi',
+    fee: 1200,
+    rating: 4.7,
+    availableNext: 'Tomorrow, 5:00 PM',
+    lat: 28.5293,
+    lng: 77.1534,
+  },
+  {
+    id: 'doc-005',
+    name: 'Dr. Priya Patel',
+    specialty: 'Gynecologist',
+    experience: 10,
+    qualification: 'MBBS, MD - Obstetrics & Gynecology',
+    clinic: 'Women Wellness Clinic',
+    address: 'Lajpat Nagar, New Delhi',
+    fee: 1000,
+    rating: 4.8,
+    availableNext: 'Today, 6:00 PM',
+    lat: 28.5678,
+    lng: 77.2433,
+  },
+  {
+    id: 'doc-006',
+    name: 'Dr. Amit Singh',
+    specialty: 'General Physician',
+    experience: 5,
+    qualification: 'MBBS',
+    clinic: 'City Health Clinic',
+    address: 'Karol Bagh, New Delhi',
+    fee: 500,
+    rating: 4.4,
+    availableNext: 'Today, 1:00 PM',
+    lat: 28.6538,
+    lng: 77.1906,
+  }
+];
+

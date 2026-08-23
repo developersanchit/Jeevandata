@@ -1,5 +1,21 @@
-export type ViewState = 'home' | 'emergency' | 'hospitals' | 'donors' | 'records' | 'doctor-portal' | 'hospital-portal' | 'donor-profile';
-export type Role = 'citizen' | 'doctor' | 'hospital' | 'donor';
+export type ViewState = 'home' | 'emergency' | 'hospitals' | 'donors' | 'records' | 'doctor-portal' | 'hospital-portal' | 'blood-bank-portal' | 'doctors' | 'donate-blood';
+export type Role = 'citizen' | 'doctor' | 'hospital' | 'blood-bank';
+
+export interface Doctor {
+  id: string;
+  name: string;
+  specialty: string;
+  experience: number;
+  qualification: string;
+  clinic: string;
+  address: string;
+  fee: number;
+  rating: number;
+  availableNext: string;
+  distance?: number;
+  lat: number;
+  lng: number;
+}
 
 export interface Hospital {
   id: string;

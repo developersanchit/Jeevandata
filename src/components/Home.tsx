@@ -1,4 +1,4 @@
-import { Search, ShieldAlert, Droplet, Activity, FileText } from "lucide-react";
+import { Search, ShieldAlert, Droplet, Activity, FileText, Heart } from "lucide-react";
 import { ViewState } from "../types";
 
 interface HomeProps {
@@ -42,7 +42,7 @@ export default function Home({ onNavigate }: HomeProps) {
             <div className="w-2 h-6 bg-blue-600 rounded-full"></div>
             <h2 className="text-xl font-bold text-slate-800 tracking-tight">Citizen Health Services</h2>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             <div 
               onClick={() => onNavigate('emergency')}
               className="bg-red-50 border border-red-100 p-6 rounded-2xl hover:bg-red-100 transition-colors cursor-pointer group flex flex-col items-start text-left"
@@ -66,6 +66,17 @@ export default function Home({ onNavigate }: HomeProps) {
             </div>
 
             <div 
+              onClick={() => onNavigate('doctors')}
+              className="bg-white border border-slate-200 p-6 rounded-2xl hover:border-indigo-400 transition-all cursor-pointer shadow-sm group flex flex-col items-start text-left"
+            >
+              <div className="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center mb-4 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                <Search className="w-6 h-6" />
+              </div>
+              <h3 className="font-bold text-slate-800 mb-1 text-lg">Book Doctors</h3>
+              <p className="text-sm text-slate-500">Find local verified doctors and book appointments.</p>
+            </div>
+
+            <div 
               onClick={() => onNavigate('donors')}
               className="bg-white border border-slate-200 p-6 rounded-2xl hover:border-amber-400 transition-all cursor-pointer shadow-sm group flex flex-col items-start text-left"
             >
@@ -85,6 +96,17 @@ export default function Home({ onNavigate }: HomeProps) {
               </div>
               <h3 className="font-bold text-slate-800 mb-1 text-lg">Health Records</h3>
               <p className="text-sm text-slate-500">Secure ABHA consent flow for instant digital history.</p>
+            </div>
+
+            <div 
+              onClick={() => onNavigate('donate-blood')}
+              className="bg-white border border-slate-200 p-6 rounded-2xl hover:border-rose-400 transition-all cursor-pointer shadow-sm group flex flex-col items-start text-left"
+            >
+              <div className="w-12 h-12 bg-rose-100 rounded-xl flex items-center justify-center mb-4 text-rose-600 group-hover:bg-rose-600 group-hover:text-white transition-colors">
+                <Heart className="w-6 h-6" />
+              </div>
+              <h3 className="font-bold text-slate-800 mb-1 text-lg">Donate Blood</h3>
+              <p className="text-sm text-slate-500">Donate locally and earn priority balance for emergencies.</p>
             </div>
           </div>
         </section>

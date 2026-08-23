@@ -6,7 +6,9 @@ import BloodDonors from './components/BloodDonors';
 import HealthRecords from './components/HealthRecords';
 import DoctorPortal from './components/DoctorPortal';
 import HospitalPortal from './components/HospitalPortal';
-import DonorProfile from './components/DonorProfile';
+import BloodBankPortal from './components/BloodBankPortal';
+import DoctorFinder from './components/DoctorFinder';
+import DonateBlood from './components/DonateBlood';
 import { ViewState, Role } from './types';
 
 export default function App() {
@@ -18,7 +20,7 @@ export default function App() {
     // Fiverr-like Role System: The entire app view changes based on your active role
     if (role === 'doctor') return <DoctorPortal />;
     if (role === 'hospital') return <HospitalPortal />;
-    if (role === 'donor') return <DonorProfile />;
+    if (role === 'blood-bank') return <BloodBankPortal />;
 
     // Citizen views
     switch (currentView) {
@@ -28,6 +30,10 @@ export default function App() {
         return <HospitalFinder isEmergency={true} />;
       case 'hospitals':
         return <HospitalFinder isEmergency={false} />;
+      case 'doctors':
+        return <DoctorFinder />;
+      case 'donate-blood':
+        return <DonateBlood />;
       case 'donors':
         return <BloodDonors />;
       case 'records':
@@ -65,11 +71,11 @@ export default function App() {
                 {role === 'citizen' && <User className="w-4 h-4" />}
                 {role === 'doctor' && <Stethoscope className="w-4 h-4" />}
                 {role === 'hospital' && <Building2 className="w-4 h-4" />}
-                {role === 'donor' && <Heart className="w-4 h-4" />}
+                {role === 'blood-bank' && <Heart className="w-4 h-4" />}
               </div>
               <div className="text-left hidden sm:block">
                 <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider leading-none mb-0.5">Profile</p>
-                <p className="text-sm font-bold text-slate-700 leading-none capitalize">{role}</p>
+                <p className="text-sm font-bold text-slate-700 leading-none capitalize">{role.replace('-', ' ')}</p>
               </div>
               <ChevronDown className="w-4 h-4 text-slate-400 ml-1" />
             </button>
@@ -82,7 +88,7 @@ export default function App() {
                     <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Switch Profile View</p>
                   </div>
                   <div className="p-2 flex flex-col gap-1">
-                    {(['citizen', 'doctor', 'hospital', 'donor'] as Role[]).map((r) => (
+                    {(['citizen', 'doctor', 'hospital', 'blood-bank'] as Role[]).map((r) => (
                       <button 
                         key={r}
                         onClick={() => {
@@ -97,8 +103,8 @@ export default function App() {
                         {r === 'citizen' && <User className="w-4 h-4" />}
                         {r === 'doctor' && <Stethoscope className="w-4 h-4" />}
                         {r === 'hospital' && <Building2 className="w-4 h-4" />}
-                        {r === 'donor' && <Heart className="w-4 h-4" />}
-                        <span className="capitalize">{r}</span>
+                        {r === 'blood-bank' && <Heart className="w-4 h-4" />}
+                        <span className="capitalize">{r.replace('-', ' ')}</span>
                         {role === r && <CheckCircle2 className="w-4 h-4 ml-auto" />}
                       </button>
                     ))}

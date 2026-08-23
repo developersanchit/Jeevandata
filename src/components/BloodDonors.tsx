@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { Droplet, MapPin, Clock, Search, Navigation, Filter, AlertCircle, CheckCircle2 } from 'lucide-react';
-import { MOCK_BLOOD_BANKS } from '../data';
+import { useAppContext } from '../context/AppContext';
 import { getDistanceInKm } from '../utils';
 import { useGeolocation } from '../hooks/useGeolocation';
 import { Hospital } from '../types';
@@ -10,6 +10,7 @@ const BLOOD_GROUPS = ['O+', 'O-', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-'];
 export default function BloodDonors() {
   const [selectedGroup, setSelectedGroup] = useState<string>('O+');
   const { location: userLoc, loading: locating, error, usingFallback } = useGeolocation();
+  const { bloodBanks: globalBloodBanks } = useAppContext();
   const [radius, setRadius] = useState<number>(20);
   
   const [apiData, setApiData] = useState<any[]>([]);
@@ -19,11 +20,11 @@ export default function BloodDonors() {
   useEffect(() => {
     setIsLoadingApi(true);
     const timer = setTimeout(() => {
-      setApiData(MOCK_BLOOD_BANKS);
+      setApiData(globalBloodBanks);
       setIsLoadingApi(false);
     }, 1200); // 1.2s delay to feel like a real API call
     return () => clearTimeout(timer);
-  }, []);
+  }, [globalBloodBanks]);
 
   const bloodBanks = useMemo(() => {
     if (!userLoc || isLoadingApi) return [];

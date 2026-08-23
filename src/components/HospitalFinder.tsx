@@ -1,9 +1,9 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { MapPin, Navigation, Phone, ShieldAlert, Activity, Filter, CheckCircle2, AlertCircle } from 'lucide-react';
 import { Hospital } from '../types';
-import { MOCK_HOSPITALS } from '../data';
 import { getDistanceInKm } from '../utils';
 import { useGeolocation } from '../hooks/useGeolocation';
+import { useAppContext } from '../context/AppContext';
 
 const AVAILABLE_SERVICES = [
   'CT Scan',
@@ -23,6 +23,7 @@ interface HospitalFinderProps {
 }
 
 export default function HospitalFinder({ isEmergency = false }: HospitalFinderProps) {
+  const { hospitals: globalHospitals } = useAppContext();
   const { location: userLoc, loading: locating, error, usingFallback } = useGeolocation();
   const [radius, setRadius] = useState<number>(15);
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
@@ -46,7 +47,7 @@ export default function HospitalFinder({ isEmergency = false }: HospitalFinderPr
   const hospitals = useMemo(() => {
     if (!userLoc || isLoadingApi) return [];
     
-    let sorted = MOCK_HOSPITALS.map(h => ({
+    let sorted = globalHospitals.map(h => ({
       ...h,
       distance: getDistanceInKm(userLoc.lat, userLoc.lng, h.lat, h.lng)
     }))

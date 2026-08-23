@@ -1,37 +1,33 @@
 import { Building2, Bed, Activity, ShieldAlert, Database, CheckCircle2, LogOut, AlertCircle, RefreshCw, Power } from 'lucide-react';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
+import { useAppContext } from '../context/AppContext';
 
 const ALL_FACILITY_SERVICES = [
-  'CT Scan',
-  'Burn Ward',
-  'ICU',
-  'MRI',
-  'X-Ray',
-  '24/7 Pharmacy',
-  'Ambulance',
-  'Robotic Surgery',
-  'Dialysis',
-  'Neonatal ICU'
+  'CT Scan', 'Burn Ward', 'ICU', 'MRI', 'X-Ray', 
+  '24/7 Pharmacy', 'Ambulance', 'Robotic Surgery', 'Dialysis', 'Neonatal ICU'
 ];
 
 export default function HospitalPortal() {
   const { isLoggedIn, error, login, logout } = useAuth('hospital');
+  const { hospitals, updateHospital } = useAppContext();
+  
+  // We represent "Safdarjung Hospital" as our node
+  const hospital = hospitals.find(h => h.id === 'hfr-001');
+
   const [hfrId, setHfrId] = useState('');
   const [password, setPassword] = useState('');
   
-  const [beds, setBeds] = useState(42);
-  const [emergencyActive, setEmergencyActive] = useState(true);
-  const [activeServices, setActiveServices] = useState<string[]>(['CT Scan', 'ICU', 'X-Ray', '24/7 Pharmacy', 'Ambulance']);
-
   const toggleService = (service: string) => {
-    setActiveServices(prev => 
-      prev.includes(service) ? prev.filter(s => s !== service) : [...prev, service]
-    );
+    if (!hospital) return;
+    const newServices = hospital.services.includes(service) 
+      ? hospital.services.filter(s => s !== service) 
+      : [...hospital.services, service];
+    updateHospital(hospital.id, { services: newServices });
   };
 
-  const enableAllServices = () => setActiveServices([...ALL_FACILITY_SERVICES]);
-  const disableAllServices = () => setActiveServices([]);
+  const enableAllServices = () => hospital && updateHospital(hospital.id, { services: [...ALL_FACILITY_SERVICES] });
+  const disableAllServices = () => hospital && updateHospital(hospital.id, { services: [] });
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,56 +36,54 @@ export default function HospitalPortal() {
 
   if (!isLoggedIn) {
     return (
-      <div className="flex-grow w-full bg-slate-50 flex items-center justify-center p-4 min-h-[calc(100vh-64px)]">
-        <div className="w-full max-w-md bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-          <div className="p-8 pb-6 border-b border-slate-100 text-center">
-            <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center mx-auto mb-4">
-              <Building2 className="w-6 h-6" />
-            </div>
-            <h2 className="text-2xl font-bold text-slate-900">Facility Access</h2>
-            <p className="text-slate-500 mt-2 text-sm">Authenticate via Health Facility Registry</p>
+      <div className="flex-grow flex items-center justify-center bg-slate-50 px-4 py-12">
+        <div className="max-w-md w-full bg-white rounded-3xl p-8 shadow-sm border border-slate-200">
+          <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mb-6 text-blue-600 border border-blue-200 shadow-sm">
+            <Building2 className="w-8 h-8" />
           </div>
+          <h2 className="text-2xl font-bold text-slate-900 tracking-tight">HFR Node Login</h2>
+          <p className="text-slate-500 mt-2 text-sm leading-relaxed mb-8">Access the Health Facility Registry (HFR) to manage your hospital's live bed availability and emergency routing status.</p>
           
-          <div className="p-8 pt-6">
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">HFR Facility ID (Demo: 1234)</label>
+              <input 
+                type="text" 
+                value={hfrId}
+                onChange={(e) => setHfrId(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-mono"
+                placeholder="e.g. HFR-889921"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">Password</label>
+              <input 
+                type="password" 
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                placeholder="Enter password"
+              />
+            </div>
             {error && (
-              <div className="mb-6 p-4 bg-red-50 border border-red-100 text-red-600 text-sm font-medium rounded-xl flex items-start gap-2">
-                <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
-                <span>{error}</span>
+              <div className="flex items-center gap-2 text-rose-600 bg-rose-50 p-3 rounded-lg text-sm">
+                <AlertCircle className="w-4 h-4" />
+                {error}
               </div>
             )}
-            
-            <form onSubmit={handleLogin} className="space-y-5">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">HFR Facility ID</label>
-                <input 
-                  type="text" 
-                  required 
-                  value={hfrId}
-                  onChange={(e) => setHfrId(e.target.value)}
-                  placeholder="e.g. HFR-DL-1092" 
-                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition-all text-sm font-medium placeholder-slate-400" 
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">Admin Password</label>
-                <input 
-                  type="password" 
-                  required 
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••" 
-                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition-all text-sm font-medium placeholder-slate-400" 
-                />
-              </div>
-              <button type="submit" className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white font-medium py-3 rounded-xl hover:bg-blue-700 transition-colors mt-2">
-                Access Dashboard
-              </button>
-            </form>
-          </div>
+            <button 
+              type="submit"
+              className="w-full bg-slate-900 text-white font-semibold py-3.5 rounded-xl hover:bg-slate-800 transition-colors shadow-sm mt-2"
+            >
+              Secure Login
+            </button>
+          </form>
         </div>
       </div>
     );
   }
+
+  if (!hospital) return <div>Hospital not found in HFR.</div>;
 
   return (
     <div className="flex-grow bg-slate-50 w-full pb-12">
@@ -99,7 +93,7 @@ export default function HospitalPortal() {
             <div className="w-8 h-8 bg-blue-500/20 text-blue-400 rounded-lg flex items-center justify-center border border-blue-500/30">
               <Building2 className="w-4 h-4" />
             </div>
-            <h1 className="text-lg font-semibold">Safdarjung Hospital</h1>
+            <h1 className="text-lg font-semibold">{hospital.name}</h1>
             <span className="hidden sm:flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 text-[10px] font-bold uppercase tracking-wider border border-emerald-500/30">
               <CheckCircle2 className="w-3 h-3" /> Verified
             </span>
@@ -134,17 +128,17 @@ export default function HospitalPortal() {
             <div className="flex-grow flex items-center justify-center p-8 bg-slate-50 rounded-xl border border-slate-100">
               <div className="flex items-center gap-8">
                 <button 
-                  onClick={() => setBeds(Math.max(0, beds - 1))}
+                  onClick={() => updateHospital(hospital.id, { bedsAvailable: Math.max(0, hospital.bedsAvailable - 1) })}
                   className="w-14 h-14 bg-white border border-slate-200 shadow-sm rounded-2xl flex items-center justify-center text-slate-600 hover:bg-slate-50 hover:border-slate-300 active:scale-95 transition-all"
                 >
                   <span className="text-2xl font-medium leading-none">-</span>
                 </button>
                 <div className="text-center w-24">
-                  <span className="block text-5xl font-bold text-slate-900">{beds}</span>
+                  <span className="block text-5xl font-bold text-slate-900">{hospital.bedsAvailable}</span>
                   <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider mt-2 block">Beds</span>
                 </div>
                 <button 
-                  onClick={() => setBeds(beds + 1)}
+                  onClick={() => updateHospital(hospital.id, { bedsAvailable: hospital.bedsAvailable + 1 })}
                   className="w-14 h-14 bg-white border border-slate-200 shadow-sm rounded-2xl flex items-center justify-center text-slate-600 hover:bg-slate-50 hover:border-slate-300 active:scale-95 transition-all"
                 >
                   <span className="text-2xl font-medium leading-none">+</span>
@@ -164,26 +158,26 @@ export default function HospitalPortal() {
               </div>
             </div>
             
-            <div className={`flex-grow p-8 rounded-xl border flex flex-col justify-center items-center text-center transition-colors ${emergencyActive ? 'bg-red-50 border-red-100' : 'bg-slate-50 border-slate-200'}`}>
-               <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 ${emergencyActive ? 'bg-red-100 text-red-600' : 'bg-slate-200 text-slate-400'}`}>
-                 <Activity className={`w-8 h-8 ${emergencyActive ? 'animate-pulse' : ''}`} />
+            <div className={`flex-grow p-8 rounded-xl border flex flex-col justify-center items-center text-center transition-colors ${hospital.emergencyServices ? 'bg-red-50 border-red-100' : 'bg-slate-50 border-slate-200'}`}>
+               <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 ${hospital.emergencyServices ? 'bg-red-100 text-red-600' : 'bg-slate-200 text-slate-400'}`}>
+                 <Activity className={`w-8 h-8 ${hospital.emergencyServices ? 'animate-pulse' : ''}`} />
                </div>
-               <h3 className={`text-xl font-bold mb-1 ${emergencyActive ? 'text-red-900' : 'text-slate-600'}`}>
-                 {emergencyActive ? 'Accepting Emergencies' : 'Routing Paused'}
+               <h3 className={`text-xl font-bold mb-1 ${hospital.emergencyServices ? 'text-red-900' : 'text-slate-600'}`}>
+                 {hospital.emergencyServices ? 'Accepting Emergencies' : 'Routing Paused'}
                </h3>
-               <p className={`text-sm mb-6 ${emergencyActive ? 'text-red-700/80' : 'text-slate-500'}`}>
-                 {emergencyActive ? 'Ambulances will be routed to your trauma center based on proximity.' : 'Ambulances will automatically bypass your facility.'}
+               <p className={`text-sm mb-6 ${hospital.emergencyServices ? 'text-red-700/80' : 'text-slate-500'}`}>
+                 {hospital.emergencyServices ? 'Ambulances will be routed to your trauma center based on proximity.' : 'Ambulances will automatically bypass your facility.'}
                </p>
                <button 
-                 onClick={() => setEmergencyActive(!emergencyActive)}
+                 onClick={() => updateHospital(hospital.id, { emergencyServices: !hospital.emergencyServices })}
                  className={`w-full max-w-[240px] flex items-center justify-center gap-2 py-3 rounded-xl font-medium text-sm transition-all ${
-                   emergencyActive 
+                   hospital.emergencyServices 
                    ? 'bg-red-600 text-white hover:bg-red-700 shadow-sm shadow-red-200' 
                    : 'bg-slate-900 text-white hover:bg-slate-800'
                  }`}
                >
                  <Power className="w-4 h-4" />
-                 {emergencyActive ? 'Pause Routing' : 'Activate Routing'}
+                 {hospital.emergencyServices ? 'Pause Routing' : 'Activate Routing'}
                </button>
             </div>
           </div>
@@ -216,7 +210,7 @@ export default function HospitalPortal() {
 
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
             {ALL_FACILITY_SERVICES.map(service => {
-              const isEnabled = activeServices.includes(service);
+              const isEnabled = hospital.services.includes(service);
               return (
                 <button
                   key={service}
@@ -236,8 +230,6 @@ export default function HospitalPortal() {
             })}
           </div>
         </div>
-
-
       </div>
     </div>
   );

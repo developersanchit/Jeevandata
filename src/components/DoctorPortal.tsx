@@ -1,23 +1,23 @@
-import { Stethoscope, FileText, CheckCircle2, Users, Clock, Search, LogOut, ChevronRight, Activity, Calendar, AlertCircle, Plus, FileSignature, Pill, ClipboardList } from 'lucide-react';
+import { Stethoscope, FileText, CheckCircle2, Users, Clock, Search, LogOut, ChevronRight, Activity, Calendar, AlertCircle, Plus, FileSignature, Pill, ClipboardList, ShieldAlert } from 'lucide-react';
 import React, { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
+import { useAppContext, PatientQueueItem } from '../context/AppContext';
 
 export default function DoctorPortal() {
   const { isLoggedIn, error, login, logout } = useAuth('doctor');
+  const { doctorQueues, updateDoctorQueue } = useAppContext();
+  
+  // Representing Dr. Vikram Singh
+  const doctorId = 'doc-001';
+  const queue = doctorQueues[doctorId] || [];
+
   const [hprId, setHprId] = useState('');
   const [password, setPassword] = useState('');
   
   const [patientAbha, setPatientAbha] = useState('');
   const [requestSent, setRequestSent] = useState(false);
   const [isSendingConsent, setIsSendingConsent] = useState(false);
-  const [queue, setQueue] = useState([
-    { id: 1, name: 'Rahul Verma', age: '45M', time: '10:30 AM', status: 'Waiting', type: 'Post-Op Follow-up', abha: 'rahul.v@abdm', active: true },
-    { id: 2, name: 'Priya Patel', age: '32F', time: '11:15 AM', status: 'Scheduled', type: 'Initial Consultation', abha: 'priya99@abdm', active: false },
-    { id: 3, name: 'Amit Singh', age: '58M', time: '12:00 PM', status: 'Scheduled', type: 'ECG Report Review', abha: 'amits@abdm', active: false },
-    { id: 4, name: 'Sneha Rao', age: '28F', time: '02:00 PM', status: 'Scheduled', type: 'Thyroid Checkup', abha: 'sneha.rao@abdm', active: false },
-    { id: 5, name: 'Vikram Sharma', age: '62M', time: '03:30 PM', status: 'Scheduled', type: 'Orthopedic Consult', abha: 'vikram.s@abdm', active: false },
-    { id: 6, name: 'Arjun Das', age: '12M', time: '04:15 PM', status: 'Scheduled', type: 'Pediatric Vaccine', abha: 'arjun.d@abdm', active: false }
-  ]);
+
   const [toastMessage, setToastMessage] = useState('');
 
   const showToast = (message: string) => {
@@ -25,9 +25,13 @@ export default function DoctorPortal() {
     setTimeout(() => setToastMessage(''), 3000);
   };
 
+  const setQueue = (updater: (prev: PatientQueueItem[]) => PatientQueueItem[]) => {
+    updateDoctorQueue(doctorId, updater(queue));
+  };
+
   const handleStartConsult = (id: number, name: string) => {
     setQueue(prev => prev.map(p => {
-      if (p.id === id) return { ...p, status: 'In Consult' };
+      if (p.id === id) return { ...p, status: 'In Consult' as const };
       return p;
     }));
     showToast(`Started consultation with ${name}`);
@@ -36,18 +40,17 @@ export default function DoctorPortal() {
   const handleFinishConsult = (id: number) => {
     setQueue(prev => {
       const updated = prev.map(p => {
-        if (p.id === id) return { ...p, status: 'Completed', active: false };
+        if (p.id === id) return { ...p, status: 'Completed' as const, active: false };
         return p;
       });
-      // Find next scheduled to make active
-      const nextIndex = updated.findIndex(p => p.status === 'Scheduled');
-      if (nextIndex !== -1) {
-        updated[nextIndex].active = true;
-        updated[nextIndex].status = 'Waiting';
+      // Find next scheduled and make them active waiting
+      const nextIdx = updated.findIndex(p => p.status === 'Scheduled');
+      if (nextIdx !== -1) {
+        updated[nextIdx] = { ...updated[nextIdx], status: 'Waiting' as const, active: true };
       }
       return updated;
     });
-    showToast('Consultation completed. Next patient is ready.');
+    showToast(`Consultation finished. Next patient called.`);
   };
 
   const handleLogin = (e: React.FormEvent) => {
@@ -55,54 +58,62 @@ export default function DoctorPortal() {
     login(hprId, password);
   };
 
+  const handleSendConsent = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!patientAbha) return;
+    setIsSendingConsent(true);
+    setTimeout(() => {
+      setIsSendingConsent(false);
+      setRequestSent(true);
+      setTimeout(() => setRequestSent(false), 3000);
+      setPatientAbha('');
+    }, 1500);
+  };
+
   if (!isLoggedIn) {
     return (
-      <div className="flex-grow w-full bg-slate-50 flex items-center justify-center p-4 min-h-[calc(100vh-64px)]">
-        <div className="w-full max-w-md bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-          <div className="p-8 pb-6 border-b border-slate-100 text-center">
-            <div className="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center mx-auto mb-4">
-              <Stethoscope className="w-6 h-6" />
-            </div>
-            <h2 className="text-2xl font-bold text-slate-900">Doctor Portal</h2>
-            <p className="text-slate-500 mt-2 text-sm">Sign in with your HPR ID to continue.</p>
+      <div className="flex-grow flex items-center justify-center bg-slate-50 px-4 py-12">
+        <div className="max-w-md w-full bg-white rounded-3xl p-8 shadow-sm border border-slate-200">
+          <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mb-6 text-blue-600 border border-blue-200 shadow-sm">
+            <Stethoscope className="w-8 h-8" />
           </div>
+          <h2 className="text-2xl font-bold text-slate-900 tracking-tight">HPR Login</h2>
+          <p className="text-slate-500 mt-2 text-sm leading-relaxed mb-8">Access the Healthcare Professionals Registry (HPR) to manage your patients and ABHA records.</p>
           
-          <div className="p-8 pt-6">
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">HPR ID (Demo: 1234)</label>
+              <input 
+                type="text" 
+                value={hprId}
+                onChange={(e) => setHprId(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-mono"
+                placeholder="e.g. 12-3456-7890"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">Password</label>
+              <input 
+                type="password" 
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                placeholder="Enter password"
+              />
+            </div>
             {error && (
-              <div className="mb-6 p-4 bg-red-50 border border-red-100 text-red-600 text-sm font-medium rounded-xl flex items-start gap-2">
-                <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
-                <span>{error}</span>
+              <div className="flex items-center gap-2 text-rose-600 bg-rose-50 p-3 rounded-lg text-sm">
+                <AlertCircle className="w-4 h-4" />
+                {error}
               </div>
             )}
-            
-            <form onSubmit={handleLogin} className="space-y-5">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">HPR ID</label>
-                <input 
-                  type="text" 
-                  required 
-                  value={hprId}
-                  onChange={(e) => setHprId(e.target.value)}
-                  placeholder="e.g. 1234-5678-9012" 
-                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-600 focus:border-transparent outline-none transition-all text-sm font-medium placeholder-slate-400" 
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">Password</label>
-                <input 
-                  type="password" 
-                  required 
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••" 
-                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-600 focus:border-transparent outline-none transition-all text-sm font-medium placeholder-slate-400" 
-                />
-              </div>
-              <button type="submit" className="w-full flex items-center justify-center gap-2 bg-indigo-600 text-white font-medium py-3 rounded-xl hover:bg-indigo-700 transition-colors mt-2">
-                Secure Login
-              </button>
-            </form>
-          </div>
+            <button 
+              type="submit"
+              className="w-full bg-slate-900 text-white font-semibold py-3.5 rounded-xl hover:bg-slate-800 transition-colors shadow-sm mt-2"
+            >
+              Secure Login
+            </button>
+          </form>
         </div>
       </div>
     );
@@ -110,24 +121,21 @@ export default function DoctorPortal() {
 
   return (
     <div className="flex-grow bg-slate-50 w-full pb-12">
-      {/* Header */}
-      <div className="bg-white border-b border-slate-200 sticky top-0 z-10">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center">
-              <Stethoscope className="w-5 h-5" />
+      {/* Top Navbar specifically for Doctor */}
+      <div className="bg-slate-900 border-b border-slate-800 sticky top-0 z-10 text-white">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-blue-500/20 text-blue-400 rounded-lg flex items-center justify-center border border-blue-500/30">
+              <Stethoscope className="w-4 h-4" />
             </div>
-            <div>
-              <h1 className="text-lg font-bold text-slate-900 leading-tight">Dr. Sarah Jenkins</h1>
-              <p className="text-xs text-slate-500 font-medium mt-0.5">Senior Cardiologist | AIIMS Delhi</p>
-            </div>
-            <span className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 ml-2 rounded-md bg-emerald-50 text-emerald-700 text-[10px] font-bold uppercase tracking-wider border border-emerald-200">
-              <CheckCircle2 className="w-3 h-3" /> Verified HPR
+            <h1 className="text-lg font-semibold">Dr. Vikram Singh</h1>
+            <span className="hidden sm:flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 text-[10px] font-bold uppercase tracking-wider border border-emerald-500/30">
+              <CheckCircle2 className="w-3 h-3" /> HPR Verified
             </span>
           </div>
           <button 
             onClick={logout}
-            className="text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100"
+            className="text-sm font-medium text-slate-400 hover:text-white transition-colors flex items-center gap-2"
           >
             <LogOut className="w-4 h-4" />
             <span className="hidden sm:inline">Sign Out</span>
@@ -135,233 +143,232 @@ export default function DoctorPortal() {
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
         
-        {/* Left Column */}
-        <div className="lg:col-span-8 space-y-8">
-          
-          {/* Quick Actions / Request Records */}
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-            <div className="flex justify-between items-start mb-6">
-              <div>
-                <h2 className="text-base font-semibold text-slate-900 flex items-center gap-2">
-                  <Activity className="w-5 h-5 text-indigo-500" /> ABDM Consent Manager
-                </h2>
-                <p className="text-sm text-slate-500 mt-1">Request digital health records from patients for clinical review.</p>
-              </div>
+        {/* Quick Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 mb-8">
+          <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-start gap-4">
+            <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center shrink-0">
+              <Users className="w-6 h-6" />
             </div>
-            
-            {!requestSent ? (
-              <div className="flex flex-col sm:flex-row gap-3">
-                <div className="relative flex-grow">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                    <Search className="w-4 h-4 text-slate-400" />
-                  </div>
-                  <input
-                    type="text"
-                    value={patientAbha}
-                    onChange={(e) => setPatientAbha(e.target.value)}
-                    placeholder="Enter Patient ABHA Address (e.g. rahul@abdm)"
-                    className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-medium transition-all"
-                  />
-                </div>
-                <button 
-                  onClick={() => { 
-                    if(patientAbha) {
-                      setIsSendingConsent(true);
-                      setTimeout(() => {
-                        setIsSendingConsent(false);
-                        setRequestSent(true);
-                      }, 1200);
-                    }
-                  }}
-                  disabled={isSendingConsent || !patientAbha}
-                  className={`bg-indigo-600 text-white font-medium px-8 py-3 rounded-xl transition-colors shrink-0 text-sm shadow-sm flex items-center justify-center min-w-[160px] ${
-                    isSendingConsent || !patientAbha ? 'opacity-70 cursor-not-allowed' : 'hover:bg-indigo-700 shadow-indigo-200'
-                  }`}
-                >
-                  {isSendingConsent ? (
-                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                  ) : (
-                    'Request Access'
-                  )}
-                </button>
-              </div>
-            ) : (
-              <div className="bg-emerald-50 border border-emerald-200 p-4 rounded-xl flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center">
-                    <CheckCircle2 className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-emerald-900 text-sm">Request Sent to {patientAbha}</p>
-                    <p className="text-xs text-emerald-700 mt-0.5">Waiting for patient to approve via their PHR application.</p>
-                  </div>
-                </div>
-                <button 
-                  onClick={() => { setRequestSent(false); setPatientAbha(''); }}
-                  className="text-xs font-semibold text-emerald-700 hover:text-emerald-900 bg-emerald-100/50 px-4 py-2 rounded-lg transition-colors border border-emerald-200"
-                >
-                  New Request
-                </button>
-              </div>
-            )}
-            
-            <div className="mt-6 pt-6 border-t border-slate-100">
-              <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Recently Granted Consents</h3>
-              <div className="flex gap-3 overflow-x-auto pb-2">
-                {['Sneha Rao', 'Vikram Singh', 'Aarti Sharma'].map((name, i) => (
-                  <div key={i} className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 shrink-0">
-                    <div className="w-6 h-6 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-[10px] font-bold">
-                      {name.split(' ').map(n => n[0]).join('')}
-                    </div>
-                    <span className="text-xs font-medium text-slate-700">{name}</span>
-                    <FileText className="w-3.5 h-3.5 text-slate-400 ml-2" />
-                  </div>
-                ))}
-              </div>
+            <div>
+              <p className="text-sm font-semibold text-slate-500 mb-1">Total Patients Today</p>
+              <h3 className="text-3xl font-bold text-slate-900">{queue.length}</h3>
+            </div>
+          </div>
+          
+          <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-start gap-4">
+            <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center shrink-0">
+              <CheckCircle2 className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-slate-500 mb-1">Consultations Done</p>
+              <h3 className="text-3xl font-bold text-slate-900">
+                {queue.filter(q => q.status === 'Completed').length}
+              </h3>
             </div>
           </div>
 
-          {/* Today's Appointments */}
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-            <div className="p-6 border-b border-slate-100 flex items-center justify-between">
-              <div>
-                <h2 className="text-base font-semibold text-slate-900">Today's Queue</h2>
-                <p className="text-sm text-slate-500 mt-1">Oct 24, 2025 • 3 Appointments Remaining</p>
-              </div>
-              <button 
-                onClick={() => showToast('Opening calendar view...')}
-                className="text-sm font-medium text-indigo-600 hover:text-indigo-700 bg-indigo-50 px-3 py-1.5 rounded-lg transition-colors"
-              >
-                View Calendar
-              </button>
+          <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-start gap-4">
+            <div className="w-12 h-12 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center shrink-0">
+              <Clock className="w-6 h-6" />
             </div>
-            <div className="divide-y divide-slate-100">
-              {queue.map((patient, i) => (
-                <div key={patient.id} className={`p-6 transition-colors ${patient.active ? 'bg-indigo-50/30' : 'hover:bg-slate-50'}`}>
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-                    <div className="flex items-start gap-4">
-                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-bold text-sm shrink-0 border ${
-                        patient.active ? 'bg-indigo-100 text-indigo-700 border-indigo-200' : 'bg-slate-100 text-slate-600 border-slate-200'
-                      }`}>
-                        {patient.name.split(' ').map(n => n[0]).join('')}
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <h3 className="text-sm font-bold text-slate-900">{patient.name}</h3>
-                          <span className="text-[10px] font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">{patient.age}</span>
+            <div>
+              <p className="text-sm font-semibold text-slate-500 mb-1">Waiting in Queue</p>
+              <h3 className="text-3xl font-bold text-slate-900">
+                {queue.filter(q => q.status === 'Waiting' || q.status === 'Scheduled').length}
+              </h3>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
+          
+          {/* Main Queue Management */}
+          <div className="lg:col-span-2">
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+              <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+                <div>
+                  <h2 className="text-lg font-bold text-slate-900">Today's Queue</h2>
+                  <p className="text-sm text-slate-500">Manage walk-ins and scheduled appointments</p>
+                </div>
+                <button className="hidden sm:flex text-sm font-medium text-blue-600 hover:text-blue-700 items-center gap-2 bg-blue-50 px-3 py-1.5 rounded-lg transition-colors">
+                  <Plus className="w-4 h-4" /> Add Walk-in
+                </button>
+              </div>
+              
+              <div className="divide-y divide-slate-100">
+                {queue.map((patient) => (
+                  <div 
+                    key={patient.id} 
+                    className={`p-6 transition-all ${patient.active ? 'bg-blue-50/30' : 'hover:bg-slate-50'}`}
+                  >
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      
+                      <div className="flex items-start gap-4">
+                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-bold text-lg shrink-0 ${
+                          patient.status === 'Completed' ? 'bg-emerald-100 text-emerald-700' :
+                          patient.status === 'In Consult' ? 'bg-blue-600 text-white shadow-md shadow-blue-200' :
+                          'bg-slate-100 text-slate-600'
+                        }`}>
+                          {patient.name.split(' ').map(n => n[0]).join('')}
                         </div>
-                        <p className="text-xs font-medium text-slate-600 mb-2">{patient.type}</p>
-                        <div className="flex items-center gap-3 text-xs text-slate-500">
-                          <span className="flex items-center gap-1.5 font-medium"><Clock className="w-3.5 h-3.5 text-indigo-500" /> {patient.time}</span>
-                          <span className="flex items-center gap-1.5"><FileText className="w-3.5 h-3.5" /> {patient.abha}</span>
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <h3 className="text-base font-bold text-slate-900">{patient.name}</h3>
+                            <span className="text-xs font-semibold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">
+                              {patient.age}
+                            </span>
+                          </div>
+                          <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm text-slate-500">
+                            <span className="flex items-center gap-1 font-medium text-slate-700">
+                              <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                              {patient.time}
+                            </span>
+                            <span className="hidden sm:inline">•</span>
+                            <span>{patient.type}</span>
+                            <span className="hidden sm:inline">•</span>
+                            <span className="font-mono text-xs">{patient.abha}</span>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-2 sm:flex-col sm:items-end sm:gap-2">
-                       <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${
-                        patient.status === 'Waiting' ? 'bg-amber-100 text-amber-800 border border-amber-200' :
-                        'bg-slate-100 text-slate-600 border border-slate-200'
-                      }`}>
-                        {patient.status}
-                      </span>
-                      {patient.active ? (
-                        patient.status === 'Waiting' ? (
+
+                      <div className="flex items-center gap-3 sm:flex-col sm:items-end">
+                        <span className={`px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider ${
+                          patient.status === 'Waiting' ? 'bg-amber-100 text-amber-700 border border-amber-200' :
+                          patient.status === 'In Consult' ? 'bg-blue-100 text-blue-700 border border-blue-200' :
+                          patient.status === 'Completed' ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' :
+                          'bg-slate-100 text-slate-600 border border-slate-200'
+                        }`}>
+                          {patient.status}
+                        </span>
+                        
+                        {patient.status === 'Waiting' && (
                           <button 
                             onClick={() => handleStartConsult(patient.id, patient.name)}
-                            className="text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg transition-colors mt-1 shadow-sm shadow-indigo-200"
+                            className="text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 px-4 py-2 rounded-lg transition-colors w-full sm:w-auto"
                           >
                             Start Consult
                           </button>
-                        ) : (
+                        )}
+                        {patient.status === 'In Consult' && (
                           <button 
                             onClick={() => handleFinishConsult(patient.id)}
-                            className="text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded-lg transition-colors mt-1 shadow-sm shadow-emerald-200"
+                            className="text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded-lg shadow-sm shadow-emerald-200 transition-colors w-full sm:w-auto flex items-center justify-center gap-1.5"
                           >
-                            Finish Consult
+                            <CheckCircle2 className="w-3.5 h-3.5" /> Finish
                           </button>
-                        )
-                      ) : (
-                        <button 
-                          onClick={() => showToast(`Opening medical history for ${patient.name}...`)}
-                          className="text-xs font-medium text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 px-4 py-2 rounded-lg transition-colors mt-1"
-                        >
-                          View History
-                        </button>
-                      )}
+                        )}
+                      </div>
                     </div>
+
+                    {/* Active Consultation Panel */}
+                    {patient.status === 'In Consult' && (
+                      <div className="mt-6 ml-16 border border-blue-100 bg-white rounded-xl p-4 shadow-sm animate-in fade-in slide-in-from-top-2">
+                        <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
+                          <button className="flex items-center gap-2 px-3 py-2 bg-blue-50 text-blue-700 rounded-lg text-xs font-semibold border border-blue-100 whitespace-nowrap">
+                            <ClipboardList className="w-3.5 h-3.5" /> E-Prescription
+                          </button>
+                          <button className="flex items-center gap-2 px-3 py-2 bg-slate-50 text-slate-700 hover:bg-slate-100 rounded-lg text-xs font-semibold border border-slate-200 whitespace-nowrap transition-colors">
+                            <FileSignature className="w-3.5 h-3.5" /> Request Lab Test
+                          </button>
+                          <button className="flex items-center gap-2 px-3 py-2 bg-slate-50 text-slate-700 hover:bg-slate-100 rounded-lg text-xs font-semibold border border-slate-200 whitespace-nowrap transition-colors">
+                            <Activity className="w-3.5 h-3.5" /> View Vitals
+                          </button>
+                        </div>
+                        
+                        <div className="space-y-3">
+                           <div className="relative">
+                             <Pill className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                             <input type="text" placeholder="Add medication..." className="w-full pl-9 pr-4 py-2.5 text-sm rounded-lg border border-slate-200 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" />
+                           </div>
+                           <div className="relative">
+                             <FileText className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                             <input type="text" placeholder="Clinical notes (will sync to ABHA)" className="w-full pl-9 pr-4 py-2.5 text-sm rounded-lg border border-slate-200 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" />
+                           </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                </div>
-              ))}
+                ))}
+                
+                {queue.length === 0 && (
+                  <div className="p-12 text-center text-slate-500">
+                    No patients in queue for today.
+                  </div>
+                )}
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Right Column / Sidebar */}
-        <div className="lg:col-span-4 space-y-6">
-          
-          <button 
-            onClick={() => showToast('Opening e-Prescription module...')}
-            className="w-full bg-slate-900 text-white font-semibold py-3.5 rounded-xl hover:bg-slate-800 transition-colors flex items-center justify-center gap-2 shadow-sm"
-          >
-            <Plus className="w-5 h-5" /> Write Prescription
-          </button>
-
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-            <h2 className="text-sm font-semibold text-slate-900 mb-4">Practice Overview</h2>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                <p className="text-xs text-slate-500 font-medium mb-1">Patients Today</p>
-                <p className="text-2xl font-bold text-slate-900">14</p>
-              </div>
-              <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                <p className="text-xs text-slate-500 font-medium mb-1">Pending Reports</p>
-                <p className="text-2xl font-bold text-amber-600">3</p>
-              </div>
-              <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 col-span-2 flex items-center justify-between">
+          {/* Right Sidebar */}
+          <div className="lg:col-span-1 space-y-6">
+            
+            {/* ABHA Consent Request */}
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
+                  <ShieldAlert className="w-5 h-5" />
+                </div>
                 <div>
-                  <p className="text-xs text-slate-500 font-medium mb-1">Active Consents</p>
-                  <p className="text-2xl font-bold text-emerald-600">28</p>
-                </div>
-                <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
-                  <Activity className="w-5 h-5 text-emerald-600" />
+                  <h3 className="font-bold text-slate-900">ABHA Records</h3>
+                  <p className="text-xs text-slate-500">Request patient history</p>
                 </div>
               </div>
+              
+              <form onSubmit={handleSendConsent} className="space-y-3">
+                <div className="relative">
+                  <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input 
+                    type="text" 
+                    value={patientAbha}
+                    onChange={e => setPatientAbha(e.target.value)}
+                    placeholder="Enter ABHA Address" 
+                    className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                  />
+                </div>
+                <button 
+                  type="submit"
+                  disabled={!patientAbha || isSendingConsent || requestSent}
+                  className="w-full bg-slate-900 text-white font-medium py-2.5 rounded-xl text-sm hover:bg-slate-800 transition-colors disabled:opacity-50 flex items-center justify-center h-10"
+                >
+                  {isSendingConsent ? (
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : requestSent ? (
+                    <span className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> Request Sent</span>
+                  ) : (
+                    'Request Consent'
+                  )}
+                </button>
+              </form>
+              <p className="text-[11px] text-slate-400 mt-3 text-center">Patient must approve via PHR app (e.g. ABHA app)</p>
             </div>
-          </div>
+            
+            {/* Recent Notifications */}
+            <div className="bg-slate-900 rounded-2xl shadow-sm p-6 text-white border border-slate-800">
+               <h3 className="text-sm font-semibold mb-4 text-slate-300">System Alerts</h3>
+               <div className="space-y-4">
+                 <div className="flex gap-3 items-start">
+                   <div className="w-2 h-2 rounded-full bg-blue-500 mt-1.5 shrink-0" />
+                   <div>
+                     <p className="text-sm font-medium">New Guidelines Published</p>
+                     <p className="text-xs text-slate-400 mt-1">NMC has updated the e-prescription format requirements for Schedule H drugs.</p>
+                   </div>
+                 </div>
+                 <div className="flex gap-3 items-start">
+                   <div className="w-2 h-2 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
+                   <div>
+                     <p className="text-sm font-medium">Consent Approved</p>
+                     <p className="text-xs text-slate-400 mt-1">Amit Singh (ABHA: amits@abdm) has approved your record access request.</p>
+                   </div>
+                 </div>
+               </div>
+            </div>
 
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-            <h2 className="text-sm font-semibold text-slate-900 mb-4">Quick Links</h2>
-            <div className="space-y-2">
-              <button 
-                onClick={() => showToast('Fetching lab results queue...')}
-                className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 text-sm font-medium text-slate-700 transition-colors border border-transparent hover:border-slate-200 group"
-              >
-                <span className="flex items-center gap-3"><ClipboardList className="w-4 h-4 text-indigo-500" /> Lab Results Queue</span>
-                <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-indigo-500" />
-              </button>
-              <button 
-                onClick={() => showToast('Opening draft e-Referrals...')}
-                className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 text-sm font-medium text-slate-700 transition-colors border border-transparent hover:border-slate-200 group"
-              >
-                <span className="flex items-center gap-3"><FileSignature className="w-4 h-4 text-indigo-500" /> Draft e-Referrals</span>
-                <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-indigo-500" />
-              </button>
-              <button 
-                onClick={() => showToast('Loading Rx templates...')}
-                className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 text-sm font-medium text-slate-700 transition-colors border border-transparent hover:border-slate-200 group"
-              >
-                <span className="flex items-center gap-3"><Pill className="w-4 h-4 text-indigo-500" /> Saved Rx Templates</span>
-                <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-indigo-500" />
-              </button>
-            </div>
           </div>
         </div>
-
       </div>
-
+      
       {/* Toast Notification */}
       {toastMessage && (
         <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-slate-900 text-white px-6 py-3 rounded-xl shadow-lg flex items-center gap-3 z-50 animate-in fade-in slide-in-from-bottom-4 duration-300">
@@ -372,4 +379,3 @@ export default function DoctorPortal() {
     </div>
   );
 }
-
