@@ -54,8 +54,8 @@ export default function App() {
           <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center shrink-0 group-hover:bg-blue-700 transition-colors">
             <div className="w-4 h-4 border-2 border-white rounded-full"></div>
           </div>
-          <span className="font-bold text-xl tracking-tight text-blue-900 hidden sm:block group-hover:text-blue-700 transition-colors">HEALTH GATEWAY</span>
-          <span className="font-bold text-xl tracking-tight text-blue-900 sm:hidden">HG</span>
+          <span className="font-bold text-xl tracking-tight text-blue-900 hidden sm:block group-hover:text-blue-700 transition-colors">JEEVANDATA</span>
+          <span className="font-bold text-xl tracking-tight text-blue-900 sm:hidden">JD</span>
           <span className="bg-blue-100 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded ml-2 uppercase tracking-widest hidden md:inline-block">
             India Unified
           </span>
