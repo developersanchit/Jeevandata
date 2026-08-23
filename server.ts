@@ -60,34 +60,11 @@ async function startServer() {
       const apiKey = process.env.API_SETU_ERAKTKOSH_KEY;
       const clientId = process.env.API_SETU_CLIENT_ID;
 
-      // If credentials are not configured, send a flag telling the frontend to use MOCK data
-      if (!apiKey || !clientId) {
-        return res.json({ 
-          status: "mock", 
-          message: "API keys not found, using frontend mock data for demonstration."
-        });
-      }
-
-      // Live eRaktKosh API Call via API Setu
-      // Documentation typically expects state and district IDs
-      const response = await fetch(`https://apisetu.gov.in/api/blood-bank/v1/blood-banks?state=${state}&district=${district}`, {
-        headers: {
-          'X-APISETU-CLIENTID': clientId,
-          'X-APISETU-APIKEY': apiKey,
-          'Accept': 'application/json'
-        }
+      // For prototype presentation: Immediately return mock data to avoid any external API failures
+      return res.json({ 
+        status: "mock", 
+        message: "Running in prototype mode without external APIs."
       });
-
-      if (!response.ok) {
-        console.warn(`API Setu Request Failed with status ${response.status}. Falling back to mock data.`);
-        return res.json({ 
-          status: "mock", 
-          message: `Upstream API error: ${response.status}` 
-        });
-      }
-
-      const data = await response.json();
-      res.json({ status: "success", data: data });
 
     } catch (error) {
       console.error("eRaktKosh Proxy Error:", error);

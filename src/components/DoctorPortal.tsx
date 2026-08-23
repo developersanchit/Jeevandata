@@ -1,5 +1,5 @@
 import { Stethoscope, FileText, CheckCircle2, Users, Clock, Search, LogOut, ChevronRight, Activity, Calendar, AlertCircle, Plus, FileSignature, Pill, ClipboardList } from 'lucide-react';
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 
 export default function DoctorPortal() {
@@ -9,6 +9,46 @@ export default function DoctorPortal() {
   
   const [patientAbha, setPatientAbha] = useState('');
   const [requestSent, setRequestSent] = useState(false);
+  const [isSendingConsent, setIsSendingConsent] = useState(false);
+  const [queue, setQueue] = useState([
+    { id: 1, name: 'Rahul Verma', age: '45M', time: '10:30 AM', status: 'Waiting', type: 'Post-Op Follow-up', abha: 'rahul.v@abdm', active: true },
+    { id: 2, name: 'Priya Patel', age: '32F', time: '11:15 AM', status: 'Scheduled', type: 'Initial Consultation', abha: 'priya99@abdm', active: false },
+    { id: 3, name: 'Amit Singh', age: '58M', time: '12:00 PM', status: 'Scheduled', type: 'ECG Report Review', abha: 'amits@abdm', active: false },
+    { id: 4, name: 'Sneha Rao', age: '28F', time: '02:00 PM', status: 'Scheduled', type: 'Thyroid Checkup', abha: 'sneha.rao@abdm', active: false },
+    { id: 5, name: 'Vikram Sharma', age: '62M', time: '03:30 PM', status: 'Scheduled', type: 'Orthopedic Consult', abha: 'vikram.s@abdm', active: false },
+    { id: 6, name: 'Arjun Das', age: '12M', time: '04:15 PM', status: 'Scheduled', type: 'Pediatric Vaccine', abha: 'arjun.d@abdm', active: false }
+  ]);
+  const [toastMessage, setToastMessage] = useState('');
+
+  const showToast = (message: string) => {
+    setToastMessage(message);
+    setTimeout(() => setToastMessage(''), 3000);
+  };
+
+  const handleStartConsult = (id: number, name: string) => {
+    setQueue(prev => prev.map(p => {
+      if (p.id === id) return { ...p, status: 'In Consult' };
+      return p;
+    }));
+    showToast(`Started consultation with ${name}`);
+  };
+
+  const handleFinishConsult = (id: number) => {
+    setQueue(prev => {
+      const updated = prev.map(p => {
+        if (p.id === id) return { ...p, status: 'Completed', active: false };
+        return p;
+      });
+      // Find next scheduled to make active
+      const nextIndex = updated.findIndex(p => p.status === 'Scheduled');
+      if (nextIndex !== -1) {
+        updated[nextIndex].active = true;
+        updated[nextIndex].status = 'Waiting';
+      }
+      return updated;
+    });
+    showToast('Consultation completed. Next patient is ready.');
+  };
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -126,10 +166,25 @@ export default function DoctorPortal() {
                   />
                 </div>
                 <button 
-                  onClick={() => { if(patientAbha) setRequestSent(true); }}
-                  className="bg-indigo-600 text-white font-medium px-8 py-3 rounded-xl hover:bg-indigo-700 transition-colors shrink-0 text-sm shadow-sm shadow-indigo-200"
+                  onClick={() => { 
+                    if(patientAbha) {
+                      setIsSendingConsent(true);
+                      setTimeout(() => {
+                        setIsSendingConsent(false);
+                        setRequestSent(true);
+                      }, 1200);
+                    }
+                  }}
+                  disabled={isSendingConsent || !patientAbha}
+                  className={`bg-indigo-600 text-white font-medium px-8 py-3 rounded-xl transition-colors shrink-0 text-sm shadow-sm flex items-center justify-center min-w-[160px] ${
+                    isSendingConsent || !patientAbha ? 'opacity-70 cursor-not-allowed' : 'hover:bg-indigo-700 shadow-indigo-200'
+                  }`}
                 >
-                  Request Access
+                  {isSendingConsent ? (
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  ) : (
+                    'Request Access'
+                  )}
                 </button>
               </div>
             ) : (
@@ -175,17 +230,16 @@ export default function DoctorPortal() {
                 <h2 className="text-base font-semibold text-slate-900">Today's Queue</h2>
                 <p className="text-sm text-slate-500 mt-1">Oct 24, 2025 • 3 Appointments Remaining</p>
               </div>
-              <button className="text-sm font-medium text-indigo-600 hover:text-indigo-700 bg-indigo-50 px-3 py-1.5 rounded-lg transition-colors">
+              <button 
+                onClick={() => showToast('Opening calendar view...')}
+                className="text-sm font-medium text-indigo-600 hover:text-indigo-700 bg-indigo-50 px-3 py-1.5 rounded-lg transition-colors"
+              >
                 View Calendar
               </button>
             </div>
             <div className="divide-y divide-slate-100">
-              {[
-                { name: 'Rahul Verma', age: '45M', time: '10:30 AM', status: 'Waiting', type: 'Post-Op Follow-up', abha: 'rahul.v@abdm', active: true },
-                { name: 'Priya Patel', age: '32F', time: '11:15 AM', status: 'Scheduled', type: 'Initial Consultation', abha: 'priya99@abdm', active: false },
-                { name: 'Amit Singh', age: '58M', time: '12:00 PM', status: 'Scheduled', type: 'ECG Report Review', abha: 'amits@abdm', active: false }
-              ].map((patient, i) => (
-                <div key={i} className={`p-6 transition-colors ${patient.active ? 'bg-indigo-50/30' : 'hover:bg-slate-50'}`}>
+              {queue.map((patient, i) => (
+                <div key={patient.id} className={`p-6 transition-colors ${patient.active ? 'bg-indigo-50/30' : 'hover:bg-slate-50'}`}>
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
                     <div className="flex items-start gap-4">
                       <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-bold text-sm shrink-0 border ${
@@ -214,11 +268,26 @@ export default function DoctorPortal() {
                         {patient.status}
                       </span>
                       {patient.active ? (
-                        <button className="text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg transition-colors mt-1 shadow-sm shadow-indigo-200">
-                          Start Consult
-                        </button>
+                        patient.status === 'Waiting' ? (
+                          <button 
+                            onClick={() => handleStartConsult(patient.id, patient.name)}
+                            className="text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg transition-colors mt-1 shadow-sm shadow-indigo-200"
+                          >
+                            Start Consult
+                          </button>
+                        ) : (
+                          <button 
+                            onClick={() => handleFinishConsult(patient.id)}
+                            className="text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded-lg transition-colors mt-1 shadow-sm shadow-emerald-200"
+                          >
+                            Finish Consult
+                          </button>
+                        )
                       ) : (
-                        <button className="text-xs font-medium text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 px-4 py-2 rounded-lg transition-colors mt-1">
+                        <button 
+                          onClick={() => showToast(`Opening medical history for ${patient.name}...`)}
+                          className="text-xs font-medium text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 px-4 py-2 rounded-lg transition-colors mt-1"
+                        >
                           View History
                         </button>
                       )}
@@ -233,7 +302,10 @@ export default function DoctorPortal() {
         {/* Right Column / Sidebar */}
         <div className="lg:col-span-4 space-y-6">
           
-          <button className="w-full bg-slate-900 text-white font-semibold py-3.5 rounded-xl hover:bg-slate-800 transition-colors flex items-center justify-center gap-2 shadow-sm">
+          <button 
+            onClick={() => showToast('Opening e-Prescription module...')}
+            className="w-full bg-slate-900 text-white font-semibold py-3.5 rounded-xl hover:bg-slate-800 transition-colors flex items-center justify-center gap-2 shadow-sm"
+          >
             <Plus className="w-5 h-5" /> Write Prescription
           </button>
 
@@ -263,15 +335,24 @@ export default function DoctorPortal() {
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
             <h2 className="text-sm font-semibold text-slate-900 mb-4">Quick Links</h2>
             <div className="space-y-2">
-              <button className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 text-sm font-medium text-slate-700 transition-colors border border-transparent hover:border-slate-200 group">
+              <button 
+                onClick={() => showToast('Fetching lab results queue...')}
+                className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 text-sm font-medium text-slate-700 transition-colors border border-transparent hover:border-slate-200 group"
+              >
                 <span className="flex items-center gap-3"><ClipboardList className="w-4 h-4 text-indigo-500" /> Lab Results Queue</span>
                 <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-indigo-500" />
               </button>
-              <button className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 text-sm font-medium text-slate-700 transition-colors border border-transparent hover:border-slate-200 group">
+              <button 
+                onClick={() => showToast('Opening draft e-Referrals...')}
+                className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 text-sm font-medium text-slate-700 transition-colors border border-transparent hover:border-slate-200 group"
+              >
                 <span className="flex items-center gap-3"><FileSignature className="w-4 h-4 text-indigo-500" /> Draft e-Referrals</span>
                 <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-indigo-500" />
               </button>
-              <button className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 text-sm font-medium text-slate-700 transition-colors border border-transparent hover:border-slate-200 group">
+              <button 
+                onClick={() => showToast('Loading Rx templates...')}
+                className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 text-sm font-medium text-slate-700 transition-colors border border-transparent hover:border-slate-200 group"
+              >
                 <span className="flex items-center gap-3"><Pill className="w-4 h-4 text-indigo-500" /> Saved Rx Templates</span>
                 <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-indigo-500" />
               </button>
@@ -280,6 +361,14 @@ export default function DoctorPortal() {
         </div>
 
       </div>
+
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-slate-900 text-white px-6 py-3 rounded-xl shadow-lg flex items-center gap-3 z-50 animate-in fade-in slide-in-from-bottom-4 duration-300">
+          <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+          <p className="text-sm font-medium">{toastMessage}</p>
+        </div>
+      )}
     </div>
   );
 }

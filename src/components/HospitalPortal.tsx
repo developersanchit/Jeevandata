@@ -1,5 +1,5 @@
 import { Building2, Bed, Activity, ShieldAlert, Database, CheckCircle2, LogOut, AlertCircle, RefreshCw, Power } from 'lucide-react';
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 
 const ALL_FACILITY_SERVICES = [

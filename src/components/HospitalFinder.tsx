@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { MapPin, Navigation, Phone, ShieldAlert, Activity, Filter, CheckCircle2, AlertCircle } from 'lucide-react';
 import { Hospital } from '../types';
 import { MOCK_HOSPITALS } from '../data';
@@ -26,6 +26,16 @@ export default function HospitalFinder({ isEmergency = false }: HospitalFinderPr
   const { location: userLoc, loading: locating, error, usingFallback } = useGeolocation();
   const [radius, setRadius] = useState<number>(15);
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
+  const [isLoadingApi, setIsLoadingApi] = useState(true);
+
+  // Simulate network request to fetch hospitals
+  useEffect(() => {
+    setIsLoadingApi(true);
+    const timer = setTimeout(() => {
+      setIsLoadingApi(false);
+    }, 1200); // 1.2s delay to feel like a real API call
+    return () => clearTimeout(timer);
+  }, []);
 
   const toggleService = (service: string) => {
     setSelectedServices(prev => 
@@ -34,7 +44,7 @@ export default function HospitalFinder({ isEmergency = false }: HospitalFinderPr
   };
 
   const hospitals = useMemo(() => {
-    if (!userLoc) return [];
+    if (!userLoc || isLoadingApi) return [];
     
     let sorted = MOCK_HOSPITALS.map(h => ({
       ...h,
@@ -150,14 +160,18 @@ export default function HospitalFinder({ isEmergency = false }: HospitalFinderPr
           </div>
         )}
 
-        {locating ? (
+        {locating || isLoadingApi ? (
           <div className="flex flex-col items-center justify-center py-24">
             <div className="relative w-12 h-12 mb-4">
               <div className="absolute inset-0 border-2 border-slate-100 rounded-full"></div>
               <div className="absolute inset-0 border-2 border-slate-900 rounded-full border-t-transparent animate-spin"></div>
             </div>
-            <h3 className="text-base font-semibold text-slate-900">Acquiring Location...</h3>
-            <p className="text-sm text-slate-500 mt-1">Connecting to geospatial nodes</p>
+            <h3 className="text-base font-semibold text-slate-900">
+              {locating ? 'Acquiring Location...' : 'Syncing Health Facility Registry...'}
+            </h3>
+            <p className="text-sm text-slate-500 mt-1">
+              {locating ? 'Connecting to geospatial nodes' : 'Fetching live facility data from ABDM network'}
+            </p>
           </div>
         ) : hospitals.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 text-center">

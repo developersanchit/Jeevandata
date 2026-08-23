@@ -1,5 +1,5 @@
 import { Heart, Droplet, Award, Calendar, History, Lock, LogOut, Download, Share2, Activity, MapPin, AlertCircle } from 'lucide-react';
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 
 export default function DonorProfile() {
@@ -146,6 +146,8 @@ export default function DonorProfile() {
                   { date: 'Oct 12, 2025', location: 'AIIMS Main Blood Bank', amount: '450 ml', type: 'Whole Blood' },
                   { date: 'Jun 05, 2025', location: 'Rotary Blood Bank', amount: '450 ml', type: 'Whole Blood' },
                   { date: 'Jan 22, 2025', location: 'Indian Red Cross', amount: '500 ml', type: 'Plasma' },
+                  { date: 'Aug 14, 2024', location: 'Safdarjung Hospital', amount: '450 ml', type: 'Whole Blood' },
+                  { date: 'Mar 10, 2024', location: 'Lions Blood Bank', amount: '450 ml', type: 'Whole Blood' },
                 ].map((record, i) => (
                   <div key={i} className="p-6 hover:bg-slate-50 transition-colors">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">

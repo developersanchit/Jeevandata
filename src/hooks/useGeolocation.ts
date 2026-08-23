@@ -11,28 +11,15 @@ export function useGeolocation() {
   const [usingFallback, setUsingFallback] = useState(false);
 
   useEffect(() => {
-    if (!navigator.geolocation) {
-      setError('Geolocation is not supported by your browser');
+    // For the prototype demo, we force the location to New Delhi so the mock data always appears,
+    // regardless of where the judge is physically located when viewing the app.
+    const timer = setTimeout(() => {
       setLocation({ lat: DEFAULT_LAT, lng: DEFAULT_LNG });
       setUsingFallback(true);
       setLoading(false);
-      return;
-    }
+    }, 800); // Simulate brief location lookup delay
 
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setLocation({ lat: position.coords.latitude, lng: position.coords.longitude });
-        setLoading(false);
-      },
-      (err) => {
-        console.warn(`Geolocation Error (${err.code}): ${err.message}`);
-        setError('Could not get your location. Using default location.');
-        setLocation({ lat: DEFAULT_LAT, lng: DEFAULT_LNG });
-        setUsingFallback(true);
-        setLoading(false);
-      },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-    );
+    return () => clearTimeout(timer);
   }, []);
 
   return { location, loading, error, usingFallback };

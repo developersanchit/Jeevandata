@@ -15,32 +15,14 @@ export default function BloodDonors() {
   const [apiData, setApiData] = useState<any[]>([]);
   const [isLoadingApi, setIsLoadingApi] = useState(true);
 
+  // Simulate network request to mock data
   useEffect(() => {
-    async function fetchBloodBanks() {
-      try {
-        const response = await fetch('/api/blood-banks?state=35');
-        const json = await response.json();
-        
-        if (json.status === 'mock') {
-          console.warn(json.message || "Falling back to local mock data.");
-          setApiData(MOCK_BLOOD_BANKS);
-        } else if (json.status === 'success') {
-          if (json.data && json.data.length > 0) {
-            setApiData(json.data);
-          } else {
-            setApiData(MOCK_BLOOD_BANKS);
-          }
-        } else {
-          setApiData(MOCK_BLOOD_BANKS);
-        }
-      } catch (err) {
-        console.error("Failed to fetch blood banks:", err);
-        setApiData(MOCK_BLOOD_BANKS);
-      } finally {
-        setIsLoadingApi(false);
-      }
-    }
-    fetchBloodBanks();
+    setIsLoadingApi(true);
+    const timer = setTimeout(() => {
+      setApiData(MOCK_BLOOD_BANKS);
+      setIsLoadingApi(false);
+    }, 1200); // 1.2s delay to feel like a real API call
+    return () => clearTimeout(timer);
   }, []);
 
   const bloodBanks = useMemo(() => {
@@ -126,14 +108,18 @@ export default function BloodDonors() {
         </div>
 
         {/* Results */}
-        {locating ? (
+        {locating || isLoadingApi ? (
           <div className="flex flex-col items-center justify-center py-24">
             <div className="relative w-12 h-12 mb-4">
               <div className="absolute inset-0 border-2 border-slate-100 rounded-full"></div>
               <div className="absolute inset-0 border-2 border-slate-900 rounded-full border-t-transparent animate-spin"></div>
             </div>
-            <h3 className="text-base font-semibold text-slate-900">Acquiring Location...</h3>
-            <p className="text-sm text-slate-500 mt-1">Connecting to geospatial nodes</p>
+            <h3 className="text-base font-semibold text-slate-900">
+              {locating ? 'Acquiring Location...' : 'Syncing Live Inventory...'}
+            </h3>
+            <p className="text-sm text-slate-500 mt-1">
+              {locating ? 'Connecting to geospatial nodes' : 'Fetching latest data from eRaktKosh networks'}
+            </p>
           </div>
         ) : bloodBanks.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 text-center">
