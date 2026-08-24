@@ -10,10 +10,10 @@ export default function Home({ onNavigate }: HomeProps) {
     <main className="flex-grow flex flex-col items-center justify-start relative px-4 sm:px-8 py-12 w-full">
       <div className="text-center mb-10 w-full max-w-4xl">
         <h1 className="text-4xl sm:text-5xl font-extrabold text-slate-900 mb-4 tracking-tight">
-          Solve for Life. <span className="text-blue-600 italic">Instantly.</span>
+          Your Health, <span className="text-blue-600 italic">Simplified.</span>
         </h1>
         <p className="text-slate-500 max-w-xl mx-auto text-base sm:text-lg">
-          Unified healthcare access powered by ABDM, eRaktKosh, and national health registries. Built for a billion citizens.
+          Find nearby hospitals, book trusted doctors, and access emergency services instantly. A complete healthcare companion for you and your family.
         </p>
       </div>
 
@@ -24,7 +24,7 @@ export default function Home({ onNavigate }: HomeProps) {
         </div>
         <input
           type="text"
-          placeholder="Search hospitals, doctors, or blood types nearby..."
+          placeholder="Search for hospitals, doctors, or blood banks nearby..."
           className="flex-grow bg-transparent border-none focus:ring-0 text-base sm:text-lg py-3 sm:py-4 placeholder:text-slate-400 outline-none w-full min-w-0"
         />
         <button 
@@ -40,7 +40,7 @@ export default function Home({ onNavigate }: HomeProps) {
         <section>
           <div className="mb-6 flex items-center gap-3">
             <div className="w-2 h-6 bg-blue-600 rounded-full"></div>
-            <h2 className="text-xl font-bold text-slate-800 tracking-tight">Citizen Health Services</h2>
+            <h2 className="text-xl font-bold text-slate-800 tracking-tight">Essential Health Services</h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             <div 
@@ -51,7 +51,7 @@ export default function Home({ onNavigate }: HomeProps) {
                 <ShieldAlert className="w-6 h-6" />
               </div>
               <h3 className="font-bold text-red-900 mb-1 text-lg">Emergency SOS</h3>
-              <p className="text-sm text-red-700/80">Instant dispatch & bed booking at nearest trauma centers.</p>
+              <p className="text-sm text-red-700/80">Get immediate assistance and secure a bed at the nearest emergency center.</p>
             </div>
 
             <div 
@@ -61,8 +61,8 @@ export default function Home({ onNavigate }: HomeProps) {
               <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-4 text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors">
                 <Activity className="w-6 h-6" />
               </div>
-              <h3 className="font-bold text-slate-800 mb-1 text-lg">Hospital Finder</h3>
-              <p className="text-sm text-slate-500">Live facility registry via ABDM HFR data nodes.</p>
+              <h3 className="font-bold text-slate-800 mb-1 text-lg">Find Hospitals</h3>
+              <p className="text-sm text-slate-500">Locate nearby hospitals and view their real-time bed availability.</p>
             </div>
 
             <div 
@@ -73,7 +73,7 @@ export default function Home({ onNavigate }: HomeProps) {
                 <Search className="w-6 h-6" />
               </div>
               <h3 className="font-bold text-slate-800 mb-1 text-lg">Book Doctors</h3>
-              <p className="text-sm text-slate-500">Find local verified doctors and book appointments.</p>
+              <p className="text-sm text-slate-500">Find trusted local specialists and easily book appointments.</p>
             </div>
 
             <div 
@@ -83,8 +83,8 @@ export default function Home({ onNavigate }: HomeProps) {
               <div className="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center mb-4 text-amber-600 group-hover:bg-amber-500 group-hover:text-white transition-colors">
                 <Droplet className="w-6 h-6" />
               </div>
-              <h3 className="font-bold text-slate-800 mb-1 text-lg">Live Blood Bank</h3>
-              <p className="text-sm text-slate-500">Real-time blood stock status via eRaktKosh APIs.</p>
+              <h3 className="font-bold text-slate-800 mb-1 text-lg">Blood Availability</h3>
+              <p className="text-sm text-slate-500">Check real-time blood stock and locate nearby blood banks.</p>
             </div>
 
             <div 
@@ -95,7 +95,7 @@ export default function Home({ onNavigate }: HomeProps) {
                 <FileText className="w-6 h-6" />
               </div>
               <h3 className="font-bold text-slate-800 mb-1 text-lg">Health Records</h3>
-              <p className="text-sm text-slate-500">Secure ABHA consent flow for instant digital history.</p>
+              <p className="text-sm text-slate-500">Access and manage your digital medical history securely in one place.</p>
             </div>
 
             <div 
@@ -106,7 +106,7 @@ export default function Home({ onNavigate }: HomeProps) {
                 <Heart className="w-6 h-6" />
               </div>
               <h3 className="font-bold text-slate-800 mb-1 text-lg">Donate Blood</h3>
-              <p className="text-sm text-slate-500">Donate locally and earn priority balance for emergencies.</p>
+              <p className="text-sm text-slate-500">Schedule donations nearby and earn priority credits for emergencies.</p>
             </div>
           </div>
         </section>
