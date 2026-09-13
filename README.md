@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🩸 Sanjeevani Setu
+# 🩸 Jeevandata
 
 ### One platform. Every healthcare body. Zero wasted minutes.
 
