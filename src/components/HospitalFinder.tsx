@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { MapPin, Navigation, Phone, ShieldAlert, Activity, Filter, CheckCircle2, AlertCircle } from 'lucide-react';
+import { MapPin, Navigation, Phone, ShieldAlert, Activity, Filter, CheckCircle2, AlertCircle, ArrowLeft } from 'lucide-react';
 import { Hospital } from '../types';
 import { getDistanceInKm } from '../utils';
 import { useGeolocation } from '../hooks/useGeolocation';
@@ -19,24 +19,27 @@ const AVAILABLE_SERVICES = [
 ];
 
 interface HospitalFinderProps {
+  key?: React.Key;
   isEmergency?: boolean;
+  onBack?: () => void;
 }
 
-export default function HospitalFinder({ isEmergency = false }: HospitalFinderProps) {
+export default function HospitalFinder({ isEmergency = false, onBack }: HospitalFinderProps) {
   const { hospitals: globalHospitals } = useAppContext();
   const { location: userLoc, loading: locating, error, usingFallback } = useGeolocation();
   const [radius, setRadius] = useState<number>(15);
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
   const [isLoadingApi, setIsLoadingApi] = useState(true);
 
-  // Simulate network request to fetch hospitals
+  // Simulate fast network request to fetch hospitals
   useEffect(() => {
     setIsLoadingApi(true);
+    const delay = isEmergency ? 200 : 350;
     const timer = setTimeout(() => {
       setIsLoadingApi(false);
-    }, 1200); // 1.2s delay to feel like a real API call
+    }, delay);
     return () => clearTimeout(timer);
-  }, []);
+  }, [isEmergency]);
 
   const toggleService = (service: string) => {
     setSelectedServices(prev => 
@@ -45,7 +48,7 @@ export default function HospitalFinder({ isEmergency = false }: HospitalFinderPr
   };
 
   const hospitals = useMemo(() => {
-    if (!userLoc || isLoadingApi) return [];
+    if (!userLoc) return [];
     
     let sorted = globalHospitals.map(h => ({
       ...h,
@@ -65,7 +68,7 @@ export default function HospitalFinder({ isEmergency = false }: HospitalFinderPr
     }
 
     return sorted;
-  }, [userLoc, isEmergency, radius, selectedServices]);
+  }, [userLoc, globalHospitals, isEmergency, radius, selectedServices]);
 
   return (
     <div className="flex-grow bg-slate-50 w-full pb-12">
@@ -74,6 +77,15 @@ export default function HospitalFinder({ isEmergency = false }: HospitalFinderPr
       <div className="bg-white border-b border-slate-200">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div>
+            {onBack && (
+              <button
+                onClick={onBack}
+                className="inline-flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 border border-slate-200/80 px-3.5 py-1.5 rounded-xl transition-all mb-4 cursor-pointer group shadow-2xs"
+              >
+                <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
+                <span>Back to Home</span>
+              </button>
+            )}
             <h2 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-3">
               {isEmergency ? (
                 <>
@@ -168,10 +180,10 @@ export default function HospitalFinder({ isEmergency = false }: HospitalFinderPr
               <div className="absolute inset-0 border-2 border-slate-900 rounded-full border-t-transparent animate-spin"></div>
             </div>
             <h3 className="text-base font-semibold text-slate-900">
-              {locating ? 'Acquiring Location...' : 'Syncing Health Facility Registry...'}
+              {locating ? 'Acquiring Location...' : (isEmergency ? 'Triaging Emergency Facilities...' : 'Syncing Health Facility Registry...')}
             </h3>
             <p className="text-sm text-slate-500 mt-1">
-              {locating ? 'Connecting to geospatial nodes' : 'Fetching live facility data from ABDM network'}
+              {locating ? 'Connecting to geospatial nodes' : (isEmergency ? 'Checking live bed & trauma center readiness' : 'Fetching live facility data from ABDM network')}
             </p>
           </div>
         ) : hospitals.length === 0 ? (

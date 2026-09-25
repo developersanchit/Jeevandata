@@ -77,18 +77,18 @@ export default function DoctorPortal() {
           <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mb-6 text-blue-600 border border-blue-200 shadow-sm">
             <Stethoscope className="w-8 h-8" />
           </div>
-          <h2 className="text-2xl font-bold text-slate-900 tracking-tight">HPR Login</h2>
-          <p className="text-slate-500 mt-2 text-sm leading-relaxed mb-8">Access the Healthcare Professionals Registry (HPR) to manage your patients and ABHA records.</p>
+          <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Doctor Sign In</h2>
+          <p className="text-slate-500 mt-2 text-sm leading-relaxed mb-8">Sign in with your medical credentials to manage appointments, patient consultations, and health records.</p>
           
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">HPR ID (Demo: 1234)</label>
+              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">Doctor ID / License Number (Demo: 1234)</label>
               <input 
                 type="text" 
                 value={hprId}
                 onChange={(e) => setHprId(e.target.value)}
                 className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-mono"
-                placeholder="e.g. 12-3456-7890"
+                placeholder="e.g. DOC-1234 or 1234"
               />
             </div>
             <div>
@@ -109,9 +109,9 @@ export default function DoctorPortal() {
             )}
             <button 
               type="submit"
-              className="w-full bg-slate-900 text-white font-semibold py-3.5 rounded-xl hover:bg-slate-800 transition-colors shadow-sm mt-2"
+              className="w-full bg-slate-900 text-white font-semibold py-3.5 rounded-xl hover:bg-slate-800 transition-colors shadow-sm mt-2 cursor-pointer"
             >
-              Secure Login
+              Sign In as Doctor
             </button>
           </form>
         </div>

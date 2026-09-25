@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Droplet, MapPin, Clock, Search, Navigation, Filter, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Droplet, MapPin, Clock, Search, Navigation, Filter, AlertCircle, CheckCircle2, ArrowLeft } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import { getDistanceInKm } from '../utils';
 import { useGeolocation } from '../hooks/useGeolocation';
@@ -7,13 +7,17 @@ import { Hospital } from '../types';
 
 const BLOOD_GROUPS = ['O+', 'O-', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-'];
 
-export default function BloodDonors() {
+interface BloodDonorsProps {
+  onBack?: () => void;
+}
+
+export default function BloodDonors({ onBack }: BloodDonorsProps) {
   const [selectedGroup, setSelectedGroup] = useState<string>('O+');
   const { location: userLoc, loading: locating, error, usingFallback } = useGeolocation();
   const { bloodBanks: globalBloodBanks } = useAppContext();
   const [radius, setRadius] = useState<number>(20);
   
-  const [apiData, setApiData] = useState<any[]>([]);
+  const [apiData, setApiData] = useState<any[]>(globalBloodBanks);
   const [isLoadingApi, setIsLoadingApi] = useState(true);
 
   // Simulate network request to mock data
@@ -22,14 +26,15 @@ export default function BloodDonors() {
     const timer = setTimeout(() => {
       setApiData(globalBloodBanks);
       setIsLoadingApi(false);
-    }, 1200); // 1.2s delay to feel like a real API call
+    }, 350); // Snappy lookup delay
     return () => clearTimeout(timer);
   }, [globalBloodBanks]);
 
   const bloodBanks = useMemo(() => {
-    if (!userLoc || isLoadingApi) return [];
+    if (!userLoc) return [];
     
-    return apiData.map(bank => ({
+    const dataSource = apiData.length > 0 ? apiData : globalBloodBanks;
+    return dataSource.map(bank => ({
       ...bank,
       distance: (bank.lat && bank.lng) 
         ? getDistanceInKm(userLoc.lat, userLoc.lng, bank.lat, bank.lng) 
@@ -37,7 +42,7 @@ export default function BloodDonors() {
     }))
     .filter(bank => bank.distance !== undefined && bank.distance <= radius)
     .sort((a, b) => ((b.stock && b.stock[selectedGroup]) || 0) - ((a.stock && a.stock[selectedGroup]) || 0));
-  }, [userLoc, radius, selectedGroup, apiData, isLoadingApi]);
+  }, [userLoc, radius, selectedGroup, apiData, globalBloodBanks]);
 
   return (
     <div className="flex-grow bg-slate-50 w-full pb-12">
@@ -45,6 +50,15 @@ export default function BloodDonors() {
       <div className="bg-white border-b border-slate-200">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div>
+            {onBack && (
+              <button
+                onClick={onBack}
+                className="inline-flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 border border-slate-200/80 px-3.5 py-1.5 rounded-xl transition-all mb-4 cursor-pointer group shadow-2xs"
+              >
+                <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
+                <span>Back to Home</span>
+              </button>
+            )}
             <h2 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-3">
               <div className="w-10 h-10 bg-rose-100 text-rose-600 rounded-xl flex items-center justify-center">
                 <Droplet className="w-5 h-5 fill-current" /> 

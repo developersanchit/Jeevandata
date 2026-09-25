@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { MapPin, Navigation, Calendar, User, Search, Filter, CheckCircle2, AlertCircle, Star } from 'lucide-react';
+import { MapPin, Navigation, Calendar, User, Search, Filter, CheckCircle2, AlertCircle, Star, ArrowLeft } from 'lucide-react';
 import { Doctor } from '../types';
 import { useGeolocation } from '../hooks/useGeolocation';
 import { useAppContext } from '../context/AppContext';
@@ -19,7 +19,11 @@ function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
 
 const AVAILABLE_SPECIALTIES = ['Cardiologist', 'Dermatologist', 'Pediatrician', 'Orthopedic', 'Gynecologist', 'General Physician'];
 
-export default function DoctorFinder() {
+interface DoctorFinderProps {
+  onBack?: () => void;
+}
+
+export default function DoctorFinder({ onBack }: DoctorFinderProps) {
   const { doctors: globalDoctors, bookAppointment } = useAppContext();
   const { location: userLoc, loading: locating, error, usingFallback } = useGeolocation();
   const [radius, setRadius] = useState<number>(15);
@@ -32,7 +36,7 @@ export default function DoctorFinder() {
     setIsLoadingApi(true);
     const timer = setTimeout(() => {
       setIsLoadingApi(false);
-    }, 1200); // 1.2s delay to feel like a real API call
+    }, 350); // Snappy lookup delay
     return () => clearTimeout(timer);
   }, []);
 
@@ -43,7 +47,7 @@ export default function DoctorFinder() {
   };
 
   const doctors = useMemo(() => {
-    if (!userLoc || isLoadingApi) return [];
+    if (!userLoc) return [];
     
     let sorted = globalDoctors.map(d => ({
       ...d,
@@ -60,7 +64,7 @@ export default function DoctorFinder() {
 
     // Sort by distance
     return sorted.sort((a, b) => (a.distance || 0) - (b.distance || 0));
-  }, [userLoc, radius, selectedSpecialty, isLoadingApi]);
+  }, [userLoc, globalDoctors, radius, selectedSpecialty]);
 
   return (
     <div className="flex-grow flex flex-col bg-slate-50 min-h-full pb-20">
@@ -73,6 +77,15 @@ export default function DoctorFinder() {
         
         <div className="max-w-6xl mx-auto relative z-10 flex flex-col md:flex-row items-start md:items-end justify-between gap-6">
           <div>
+            {onBack && (
+              <button
+                onClick={onBack}
+                className="inline-flex items-center gap-2 text-sm font-semibold text-white/90 hover:text-white bg-white/10 hover:bg-white/20 border border-white/20 px-3.5 py-1.5 rounded-xl backdrop-blur-sm transition-all mb-4 cursor-pointer group shadow-2xs"
+              >
+                <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
+                <span>Back to Home</span>
+              </button>
+            )}
             <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 bg-indigo-500/20 rounded-xl flex items-center justify-center backdrop-blur-sm border border-indigo-400/30">
                 <Search className="w-5 h-5 text-indigo-100" />

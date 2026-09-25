@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { MapPin, Navigation, Droplet, CheckCircle2, AlertCircle, Heart, ArrowUpRight, Award, ShieldAlert, Filter } from 'lucide-react';
+import { MapPin, Navigation, Droplet, CheckCircle2, AlertCircle, Heart, ArrowUpRight, Award, ShieldAlert, Filter, ArrowLeft } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import { useGeolocation } from '../hooks/useGeolocation';
 
@@ -16,7 +16,11 @@ function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
   return R * c;
 }
 
-export default function DonateBlood() {
+interface DonateBloodProps {
+  onBack?: () => void;
+}
+
+export default function DonateBlood({ onBack }: DonateBloodProps) {
   const { bloodBanks: globalBloodBanks, citizenBloodBalance, addCitizenBloodBalance, updateBloodBankStock } = useAppContext();
   const { location: userLoc, loading: locating, error, usingFallback } = useGeolocation();
   const [radius, setRadius] = useState<number>(15);
@@ -64,6 +68,17 @@ export default function DonateBlood() {
         </div>
         
         <div className="max-w-6xl mx-auto relative z-10">
+          {onBack && (
+            <div className="mb-4">
+              <button
+                onClick={onBack}
+                className="inline-flex items-center gap-2 text-sm font-semibold text-white/90 hover:text-white bg-white/10 hover:bg-white/20 border border-white/20 px-3.5 py-1.5 rounded-xl backdrop-blur-sm transition-all cursor-pointer group shadow-2xs"
+              >
+                <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
+                <span>Back to Home</span>
+              </button>
+            </div>
+          )}
           <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-6 mb-8">
             <div>
               <div className="flex items-center gap-3 mb-3">

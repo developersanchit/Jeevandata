@@ -41,18 +41,18 @@ export default function HospitalPortal() {
           <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mb-6 text-blue-600 border border-blue-200 shadow-sm">
             <Building2 className="w-8 h-8" />
           </div>
-          <h2 className="text-2xl font-bold text-slate-900 tracking-tight">HFR Node Login</h2>
-          <p className="text-slate-500 mt-2 text-sm leading-relaxed mb-8">Access the Health Facility Registry (HFR) to manage your hospital's live bed availability and emergency routing status.</p>
+          <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Hospital Staff Sign In</h2>
+          <p className="text-slate-500 mt-2 text-sm leading-relaxed mb-8">Sign in to your hospital administration portal to update real-time bed capacity, critical facilities, and emergency routing.</p>
           
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">HFR Facility ID (Demo: 1234)</label>
+              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">Hospital ID or Facility Code (Demo: 1234)</label>
               <input 
                 type="text" 
                 value={hfrId}
                 onChange={(e) => setHfrId(e.target.value)}
                 className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-mono"
-                placeholder="e.g. HFR-889921"
+                placeholder="e.g. HOSP-1234 or 1234"
               />
             </div>
             <div>
@@ -73,9 +73,9 @@ export default function HospitalPortal() {
             )}
             <button 
               type="submit"
-              className="w-full bg-slate-900 text-white font-semibold py-3.5 rounded-xl hover:bg-slate-800 transition-colors shadow-sm mt-2"
+              className="w-full bg-slate-900 text-white font-semibold py-3.5 rounded-xl hover:bg-slate-800 transition-colors shadow-sm mt-2 cursor-pointer"
             >
-              Secure Login
+              Sign In to Hospital Portal
             </button>
           </form>
         </div>

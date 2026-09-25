@@ -1,9 +1,13 @@
 import React, { useState } from 'react';
-import { FileText, ShieldCheck, CheckCircle2, User, Activity } from 'lucide-react';
+import { FileText, ShieldCheck, CheckCircle2, User, Activity, ArrowLeft } from 'lucide-react';
 
 type Step = 'LOGIN' | 'PENDING_CONSENT' | 'GRANTED';
 
-export default function HealthRecords() {
+interface HealthRecordsProps {
+  onBack?: () => void;
+}
+
+export default function HealthRecords({ onBack }: HealthRecordsProps) {
   const [step, setStep] = useState<Step>('LOGIN');
   const [abhaId, setAbhaId] = useState('');
 
@@ -13,7 +17,18 @@ export default function HealthRecords() {
   };
 
   return (
-    <div className="flex-grow w-full bg-slate-50 flex items-center justify-center p-4 min-h-[calc(100vh-64px)]">
+    <div className="flex-grow w-full bg-slate-50 flex flex-col items-center justify-center p-4 min-h-[calc(100vh-64px)] py-8">
+      {onBack && (
+        <div className="w-full max-w-2xl mb-4 flex items-center justify-start">
+          <button
+            onClick={onBack}
+            className="inline-flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-slate-900 bg-white hover:bg-slate-100 border border-slate-200 px-3.5 py-1.5 rounded-xl shadow-xs transition-all cursor-pointer group"
+          >
+            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
+            <span>Back to Home</span>
+          </button>
+        </div>
+      )}
       
       <div className="w-full max-w-2xl bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
         

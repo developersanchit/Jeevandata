@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { User, ChevronDown, CheckCircle2, Building2, Stethoscope, Heart } from 'lucide-react';
 import Home from './components/Home';
 import HospitalFinder from './components/HospitalFinder';
@@ -16,6 +16,16 @@ export default function App() {
   const [role, setRole] = useState<Role>('citizen');
   const [showRoleMenu, setShowRoleMenu] = useState(false);
 
+  // Automatically scroll to the top of the page whenever the view or role changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  }, [currentView, role]);
+
+  const handleBackToHome = () => {
+    setCurrentView('home');
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  };
+
   const renderView = () => {
     // Fiverr-like Role System: The entire app view changes based on your active role
     if (role === 'doctor') return <DoctorPortal />;
@@ -27,17 +37,17 @@ export default function App() {
       case 'home':
         return <Home onNavigate={setCurrentView} />;
       case 'emergency':
-        return <HospitalFinder isEmergency={true} />;
+        return <HospitalFinder key="emergency" isEmergency={true} onBack={handleBackToHome} />;
       case 'hospitals':
-        return <HospitalFinder isEmergency={false} />;
+        return <HospitalFinder key="hospitals" isEmergency={false} onBack={handleBackToHome} />;
       case 'doctors':
-        return <DoctorFinder />;
+        return <DoctorFinder onBack={handleBackToHome} />;
       case 'donate-blood':
-        return <DonateBlood />;
+        return <DonateBlood onBack={handleBackToHome} />;
       case 'donors':
-        return <BloodDonors />;
+        return <BloodDonors onBack={handleBackToHome} />;
       case 'records':
-        return <HealthRecords />;
+        return <HealthRecords onBack={handleBackToHome} />;
       default:
         return <Home onNavigate={setCurrentView} />;
     }

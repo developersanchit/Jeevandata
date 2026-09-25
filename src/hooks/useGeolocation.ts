@@ -4,20 +4,29 @@ import { useState, useEffect } from 'react';
 const DEFAULT_LAT = 28.6304;
 const DEFAULT_LNG = 77.2177;
 
+let cachedLocation: { lat: number; lng: number } | null = null;
+
 export function useGeolocation() {
-  const [location, setLocation] = useState<{lat: number, lng: number} | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [usingFallback, setUsingFallback] = useState(false);
+  const [location, setLocation] = useState<{ lat: number; lng: number } | null>(cachedLocation);
+  const [loading, setLoading] = useState<boolean>(cachedLocation === null);
+  const [error] = useState<string | null>(null);
+  const [usingFallback, setUsingFallback] = useState<boolean>(cachedLocation !== null);
 
   useEffect(() => {
-    // For the prototype demo, we force the location to New Delhi so the mock data always appears,
-    // regardless of where the judge is physically located when viewing the app.
-    const timer = setTimeout(() => {
-      setLocation({ lat: DEFAULT_LAT, lng: DEFAULT_LNG });
+    if (cachedLocation) {
+      setLocation(cachedLocation);
       setUsingFallback(true);
       setLoading(false);
-    }, 800); // Simulate brief location lookup delay
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      const loc = { lat: DEFAULT_LAT, lng: DEFAULT_LNG };
+      cachedLocation = loc;
+      setLocation(loc);
+      setUsingFallback(true);
+      setLoading(false);
+    }, 350); // Snappy simulated location lookup
 
     return () => clearTimeout(timer);
   }, []);
