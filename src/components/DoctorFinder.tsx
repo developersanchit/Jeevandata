@@ -3,6 +3,7 @@ import { MapPin, Navigation, Calendar, User, Search, Filter, CheckCircle2, Alert
 import { Doctor } from '../types';
 import { useGeolocation } from '../hooks/useGeolocation';
 import { useAppContext } from '../context/AppContext';
+import PatientAuthModal from './PatientAuthModal';
 
 // Calculate distance between two coordinates in km using Haversine formula
 function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
@@ -21,15 +22,24 @@ const AVAILABLE_SPECIALTIES = ['Cardiologist', 'Dermatologist', 'Pediatrician', 
 
 interface DoctorFinderProps {
   onBack?: () => void;
+  onNavigateRecords?: (tab?: 'records' | 'consultations' | 'prescriptions') => void;
 }
 
-export default function DoctorFinder({ onBack }: DoctorFinderProps) {
-  const { doctors: globalDoctors, bookAppointment } = useAppContext();
+export default function DoctorFinder({ onBack, onNavigateRecords }: DoctorFinderProps) {
+  const { doctors: globalDoctors, bookAppointment, isPatientLoggedIn, bookPatientConsultation, seedInitialData } = useAppContext();
   const { location: userLoc, loading: locating, error, usingFallback } = useGeolocation();
   const [radius, setRadius] = useState<number>(15);
   const [selectedSpecialty, setSelectedSpecialty] = useState<string | null>(null);
   const [isLoadingApi, setIsLoadingApi] = useState(true);
   const [bookedDoctorId, setBookedDoctorId] = useState<string | null>(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [pendingDoctorToBook, setPendingDoctorToBook] = useState<Doctor | null>(null);
+  const [toastMessage, setToastMessage] = useState('');
+
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(''), 3500);
+  };
 
   // Simulate network request to fetch doctors
   useEffect(() => {
@@ -40,11 +50,29 @@ export default function DoctorFinder({ onBack }: DoctorFinderProps) {
     return () => clearTimeout(timer);
   }, []);
 
-  const handleBook = (doctorId: string) => {
-    bookAppointment(doctorId);
-    setBookedDoctorId(doctorId);
-    setTimeout(() => setBookedDoctorId(null), 3000);
+  const handleBook = (doctor: Doctor) => {
+    if (!isPatientLoggedIn) {
+      setPendingDoctorToBook(doctor);
+      setShowAuthModal(true);
+      return;
+    }
+
+    bookPatientConsultation(doctor);
+    setBookedDoctorId(doctor.id);
+    showToast(`Appointment scheduled with ${doctor.name}! Added to your Consultations.`);
+    setTimeout(() => setBookedDoctorId(null), 4000);
   };
+
+  const handleAuthSuccess = () => {
+    if (pendingDoctorToBook) {
+      bookPatientConsultation(pendingDoctorToBook);
+      setBookedDoctorId(pendingDoctorToBook.id);
+      showToast(`Signed in & appointment scheduled with ${pendingDoctorToBook.name}!`);
+      setPendingDoctorToBook(null);
+      setTimeout(() => setBookedDoctorId(null), 4000);
+    }
+  };
+
 
   const doctors = useMemo(() => {
     if (!userLoc) return [];
@@ -184,12 +212,28 @@ export default function DoctorFinder({ onBack }: DoctorFinderProps) {
               {locating ? 'Connecting to geospatial nodes' : 'Syncing practitioner registry'}
             </p>
           </div>
+        ) : globalDoctors.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 text-center bg-white rounded-3xl border border-slate-200 p-8 shadow-xs max-w-lg mx-auto">
+            <div className="w-16 h-16 bg-indigo-50 rounded-2xl flex items-center justify-center mb-4 text-indigo-600 border border-indigo-100">
+              <Search className="w-8 h-8" />
+            </div>
+            <h3 className="text-lg font-bold text-slate-900 mb-2">No Doctors in Connected Database</h3>
+            <p className="text-slate-500 text-xs max-w-sm mb-6 leading-relaxed">
+              All placeholder data has been removed. Doctors can register via the Doctor Portal or you can initialize the ABDM Healthcare Professional Registry with sample verified practitioners.
+            </p>
+            <button
+              onClick={() => seedInitialData()}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs px-5 py-2.5 rounded-xl transition-all shadow-sm cursor-pointer"
+            >
+              Populate ABDM Doctors Sample Data
+            </button>
+          </div>
         ) : doctors.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 text-center">
             <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mb-4 text-slate-400">
               <User className="w-8 h-8" />
             </div>
-            <h3 className="text-lg font-semibold text-slate-900 mb-2">No doctors found</h3>
+            <h3 className="text-lg font-semibold text-slate-900 mb-2">No doctors in this radius</h3>
             <p className="text-slate-500 text-sm max-w-sm">Try expanding your search radius or changing the specialty filter.</p>
           </div>
         ) : (
@@ -249,9 +293,9 @@ export default function DoctorFinder({ onBack }: DoctorFinderProps) {
                 </div>
 
                 <button 
-                  onClick={() => handleBook(doctor.id)}
+                  onClick={() => handleBook(doctor)}
                   disabled={bookedDoctorId === doctor.id}
-                  className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium transition-colors shadow-sm ${
+                  className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium transition-colors shadow-sm cursor-pointer ${
                     bookedDoctorId === doctor.id
                     ? 'bg-emerald-600 text-white'
                     : 'bg-slate-900 text-white hover:bg-slate-800'
@@ -259,7 +303,7 @@ export default function DoctorFinder({ onBack }: DoctorFinderProps) {
                   {bookedDoctorId === doctor.id ? (
                     <>
                       <CheckCircle2 className="w-4 h-4" />
-                      Booked!
+                      Appointment Booked!
                     </>
                   ) : (
                     <>
@@ -273,6 +317,30 @@ export default function DoctorFinder({ onBack }: DoctorFinderProps) {
           </div>
         )}
       </div>
+
+      {/* Patient Auth Modal if guest clicks book */}
+      <PatientAuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        onSuccess={handleAuthSuccess}
+        initialMessage="Sign in with your patient account to confirm and save this appointment to your consultations."
+      />
+
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-slate-900 text-white px-6 py-3.5 rounded-2xl shadow-xl flex items-center gap-3 z-50 animate-in fade-in slide-in-from-bottom-4 duration-300">
+          <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+          <p className="text-sm font-medium">{toastMessage}</p>
+          {onNavigateRecords && (
+            <button
+              onClick={() => onNavigateRecords('consultations')}
+              className="text-xs font-bold text-indigo-300 hover:text-white underline ml-2 cursor-pointer"
+            >
+              View Consultations
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }

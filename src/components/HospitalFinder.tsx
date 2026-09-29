@@ -25,7 +25,7 @@ interface HospitalFinderProps {
 }
 
 export default function HospitalFinder({ isEmergency = false, onBack }: HospitalFinderProps) {
-  const { hospitals: globalHospitals } = useAppContext();
+  const { hospitals: globalHospitals, seedInitialData } = useAppContext();
   const { location: userLoc, loading: locating, error, usingFallback } = useGeolocation();
   const [radius, setRadius] = useState<number>(15);
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
@@ -186,12 +186,28 @@ export default function HospitalFinder({ isEmergency = false, onBack }: Hospital
               {locating ? 'Connecting to geospatial nodes' : (isEmergency ? 'Checking live bed & trauma center readiness' : 'Fetching live facility data from ABDM network')}
             </p>
           </div>
+        ) : globalHospitals.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 text-center bg-white rounded-3xl border border-slate-200 p-8 shadow-xs max-w-lg mx-auto">
+            <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mb-4 text-blue-600 border border-blue-100">
+              <ShieldAlert className="w-8 h-8" />
+            </div>
+            <h3 className="text-lg font-bold text-slate-900 mb-2">No Facilities in Connected Database</h3>
+            <p className="text-slate-500 text-xs max-w-sm mb-6 leading-relaxed">
+              The external database is connected and clean (zero placeholder data). You can register facilities via the Hospital Staff portal or populate initial ABDM verified records.
+            </p>
+            <button
+              onClick={() => seedInitialData()}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs px-5 py-2.5 rounded-xl transition-all shadow-sm cursor-pointer"
+            >
+              Populate ABDM Registry Sample Data
+            </button>
+          </div>
         ) : hospitals.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 text-center">
             <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mb-4 text-slate-400">
               <ShieldAlert className="w-8 h-8" />
             </div>
-            <h3 className="text-lg font-semibold text-slate-900 mb-2">No facilities found</h3>
+            <h3 className="text-lg font-semibold text-slate-900 mb-2">No facilities in this radius</h3>
             <p className="text-slate-500 text-sm max-w-sm">Try expanding your search radius to find hospitals further away.</p>
           </div>
         ) : (

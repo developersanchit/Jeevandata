@@ -14,7 +14,7 @@ interface BloodDonorsProps {
 export default function BloodDonors({ onBack }: BloodDonorsProps) {
   const [selectedGroup, setSelectedGroup] = useState<string>('O+');
   const { location: userLoc, loading: locating, error, usingFallback } = useGeolocation();
-  const { bloodBanks: globalBloodBanks } = useAppContext();
+  const { bloodBanks: globalBloodBanks, seedInitialData } = useAppContext();
   const [radius, setRadius] = useState<number>(20);
   
   const [apiData, setApiData] = useState<any[]>(globalBloodBanks);
@@ -136,12 +136,28 @@ export default function BloodDonors({ onBack }: BloodDonorsProps) {
               {locating ? 'Connecting to geospatial nodes' : 'Fetching latest data from eRaktKosh networks'}
             </p>
           </div>
+        ) : globalBloodBanks.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 text-center bg-white rounded-3xl border border-slate-200 p-8 shadow-xs max-w-lg mx-auto">
+            <div className="w-16 h-16 bg-rose-50 rounded-2xl flex items-center justify-center mb-4 text-rose-600 border border-rose-100">
+              <Droplet className="w-8 h-8" />
+            </div>
+            <h3 className="text-lg font-bold text-slate-900 mb-2">No Blood Centers in Connected Database</h3>
+            <p className="text-slate-500 text-xs max-w-sm mb-6 leading-relaxed">
+              All placeholder stock has been removed. Blood banks can manage live units through the Blood Bank Portal or you can initialize sample blood centers.
+            </p>
+            <button
+              onClick={() => seedInitialData()}
+              className="bg-rose-600 hover:bg-rose-700 text-white font-semibold text-xs px-5 py-2.5 rounded-xl transition-all shadow-sm cursor-pointer"
+            >
+              Populate eRaktKosh Sample Data
+            </button>
+          </div>
         ) : bloodBanks.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 text-center">
             <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mb-4 text-slate-400">
               <Droplet className="w-8 h-8" />
             </div>
-            <h3 className="text-lg font-semibold text-slate-900 mb-2">No Blood Banks Found</h3>
+            <h3 className="text-lg font-semibold text-slate-900 mb-2">No Blood Banks in this radius</h3>
             <p className="text-slate-500 text-sm max-w-sm">Try expanding your search radius to find blood banks further away.</p>
           </div>
         ) : (

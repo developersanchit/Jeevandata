@@ -3,6 +3,7 @@ import { ViewState } from "../types";
 
 interface HomeProps {
   onNavigate: (view: ViewState) => void;
+  onOpenAuth?: () => void;
 }
 
 export default function Home({ onNavigate }: HomeProps) {
@@ -13,7 +14,7 @@ export default function Home({ onNavigate }: HomeProps) {
 
   return (
     <main className="flex-grow flex flex-col items-center justify-start relative px-4 sm:px-8 py-12 w-full">
-      <div className="text-center mb-10 w-full max-w-4xl">
+      <div className="text-center mb-8 w-full max-w-4xl">
         <h1 className="text-4xl sm:text-5xl font-extrabold text-slate-900 mb-4 tracking-tight">
           Your Health, <span className="text-blue-600 italic">Simplified.</span>
         </h1>

@@ -2,6 +2,7 @@ import express from "express";
 import path from "path";
 import { createServer as createViteServer } from "vite";
 import * as dotenv from "dotenv";
+import { db } from "./src/server/db";
 
 dotenv.config();
 
@@ -11,65 +12,333 @@ async function startServer() {
 
   app.use(express.json());
 
+  // Initialize Database connection (PostgreSQL via DATABASE_URL or resilient fallback)
+  await db.init();
+
   // ==========================================
-  // API PROXY ROUTES
+  // DATABASE STATUS & CONTROL APIS
   // ==========================================
-  
-  // Health check endpoint (for cron jobs to keep the server awake on Render)
   app.get("/api/health", (req, res) => {
     res.status(200).json({ status: "ok", timestamp: new Date().toISOString() });
   });
 
-  // These routes act as a secure proxy. The browser calls /api/..., 
-  // and this server attaches the secret API keys before calling the government APIs.
-  
-  // 1. ABDM Health Facility Registry (HFR) Proxy
-  app.get("/api/hospitals", async (req, res) => {
+  app.get("/api/db-status", async (req, res) => {
     try {
-      const lat = req.query.lat;
-      const lng = req.query.lng;
-      const abdmClientId = process.env.ABDM_CLIENT_ID;
-      const abdmClientSecret = process.env.ABDM_CLIENT_SECRET;
-
-      // TODO: Once you have your ABDM Sandbox keys, you will:
-      // 1. Call ABDM Gateway to get an access token using Client ID & Secret
-      // 2. Call the HFR API with that token to search by location/pin code
-      // 3. Return the response to the frontend
-
-      if (!abdmClientId || !abdmClientSecret) {
-        return res.status(503).json({ 
-          error: "API credentials not configured", 
-          message: "Please configure ABDM_CLIENT_ID and ABDM_CLIENT_SECRET in .env" 
-        });
-      }
-
-      // Placeholder for actual API call
-      res.json({ status: "success", data: [] });
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ error: "Internal Server Error" });
+      const status = await db.getStatus();
+      res.json(status);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
     }
   });
 
-  // 2. eRaktKosh Blood Bank Proxy
+  app.post("/api/db/retry", async (req, res) => {
+    try {
+      const connected = await db.retryConnect();
+      const status = await db.getStatus();
+      res.json({ connected, status });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.post("/api/db/clear", async (req, res) => {
+    try {
+      await db.clearAll();
+      res.json({ success: true, message: "Database tables cleared." });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.post("/api/db/seed", async (req, res) => {
+    try {
+      const sample = req.body;
+      const result = await db.seedSampleData(sample);
+      res.json(result);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  // ==========================================
+  // HOSPITALS & FACILITIES
+  // ==========================================
+  app.get("/api/hospitals", async (req, res) => {
+    try {
+      const hospitals = await db.getHospitals();
+      res.json(hospitals);
+    } catch (error: any) {
+      console.error("Hospitals fetch error:", error);
+      res.status(500).json({ error: "Failed to fetch hospitals from database" });
+    }
+  });
+
+  app.post("/api/hospitals", async (req, res) => {
+    try {
+      const saved = await db.saveHospital(req.body);
+      res.status(201).json(saved);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.put("/api/hospitals/:id", async (req, res) => {
+    try {
+      const updated = await db.updateHospital(req.params.id, req.body);
+      if (!updated) return res.status(404).json({ error: "Hospital not found" });
+      res.json(updated);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // ==========================================
+  // BLOOD BANKS
+  // ==========================================
   app.get("/api/blood-banks", async (req, res) => {
     try {
-      const state = req.query.state || '35'; // Default to Delhi State Code (or whichever your default is)
-      const district = req.query.district || '183'; // Default to a district
-      
-      const apiKey = process.env.API_SETU_ERAKTKOSH_KEY;
-      const clientId = process.env.API_SETU_CLIENT_ID;
+      const bloodBanks = await db.getBloodBanks();
+      res.json(bloodBanks);
+    } catch (error: any) {
+      console.error("Blood Banks fetch error:", error);
+      res.status(500).json({ error: "Failed to fetch blood banks from database" });
+    }
+  });
 
-      // For prototype presentation: Immediately return mock data to avoid any external API failures
-      return res.json({ 
-        status: "mock", 
-        message: "Running in prototype mode without external APIs."
-      });
+  app.post("/api/blood-banks", async (req, res) => {
+    try {
+      const saved = await db.saveBloodBank(req.body);
+      res.status(201).json(saved);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
 
-    } catch (error) {
-      console.error("eRaktKosh Proxy Error:", error);
-      // Fall back gracefully instead of crashing the frontend request
-      res.json({ status: "mock", message: "Internal server error during fetch" });
+  app.patch("/api/blood-banks/:id/stock", async (req, res) => {
+    try {
+      const { group, delta } = req.body;
+      const updated = await db.updateBloodStock(req.params.id, group, delta);
+      if (!updated) return res.status(404).json({ error: "Blood bank not found" });
+      res.json(updated);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // ==========================================
+  // DOCTORS & QUEUES
+  // ==========================================
+  app.get("/api/doctors", async (req, res) => {
+    try {
+      const doctors = await db.getDoctors();
+      res.json(doctors);
+    } catch (error: any) {
+      console.error("Doctors fetch error:", error);
+      res.status(500).json({ error: "Failed to fetch doctors from database" });
+    }
+  });
+
+  app.post("/api/doctors", async (req, res) => {
+    try {
+      const saved = await db.saveDoctor(req.body);
+      res.status(201).json(saved);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/doctor-queues/:doctorId", async (req, res) => {
+    try {
+      const queue = await db.getDoctorQueue(req.params.doctorId);
+      res.json(queue);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/doctor-queues/:doctorId", async (req, res) => {
+    try {
+      const updatedQueue = await db.updateDoctorQueue(req.params.doctorId, req.body.queue || []);
+      res.json(updatedQueue);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // ==========================================
+  // PATIENT PROFILES & AUTH
+  // ==========================================
+  app.post("/api/patients/login", async (req, res) => {
+    try {
+      const { identifier } = req.body;
+      if (!identifier || typeof identifier !== "string") {
+        return res.status(400).json({ error: "Identifier required" });
+      }
+
+      let patient = await db.getPatient(identifier);
+      if (!patient) {
+        // Register new patient automatically in the database
+        const cleanId = identifier.trim();
+        const isEmail = cleanId.includes("@");
+        const formattedAbha = isEmail ? cleanId : `${cleanId.replace(/\s+/g, "").toLowerCase()}@abdm`;
+        const randomNum = Math.floor(1000 + Math.random() * 9000);
+
+        patient = await db.savePatient({
+          id: `pat-${Date.now().toString().slice(-4)}`,
+          name: isEmail ? cleanId.split("@")[0].replace(/[._]/g, " ") : `Citizen (${cleanId.slice(-4)})`,
+          abhaId: formattedAbha,
+          abhaNumber: `91-${randomNum}-${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(1000 + Math.random() * 9000)}`,
+          phone: cleanId.match(/^\d+$/) ? `+91-${cleanId}` : "+91-98765-43210",
+          gender: "Citizen",
+          age: 28,
+          dob: "1996-01-01",
+          bloodGroup: "O+",
+          address: "Registered Citizen Address",
+          emergencyContact: "Emergency Support Contact"
+        });
+      }
+
+      res.json(patient);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/patients/:identifier", async (req, res) => {
+    try {
+      const patient = await db.getPatient(req.params.identifier);
+      if (!patient) return res.status(404).json({ error: "Patient not found" });
+      res.json(patient);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/patients", async (req, res) => {
+    try {
+      const saved = await db.savePatient(req.body);
+      res.status(201).json(saved);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // ==========================================
+  // CONSULTATIONS & APPOINTMENTS
+  // ==========================================
+  app.get("/api/consultations", async (req, res) => {
+    try {
+      const patientId = req.query.patientId as string | undefined;
+      const list = await db.getConsultations(patientId);
+      res.json(list);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/consultations", async (req, res) => {
+    try {
+      const saved = await db.saveConsultation(req.body);
+      res.status(201).json(saved);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.patch("/api/consultations/:id/status", async (req, res) => {
+    try {
+      const { status } = req.body;
+      const updated = await db.updateConsultationStatus(req.params.id, status);
+      if (!updated) return res.status(404).json({ error: "Consultation not found" });
+      res.json(updated);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // ==========================================
+  // PRESCRIPTIONS
+  // ==========================================
+  app.get("/api/prescriptions", async (req, res) => {
+    try {
+      const patientId = req.query.patientId as string | undefined;
+      const list = await db.getPrescriptions(patientId);
+      res.json(list);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/prescriptions", async (req, res) => {
+    try {
+      const saved = await db.savePrescription(req.body);
+      res.status(201).json(saved);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // ==========================================
+  // HEALTH RECORDS
+  // ==========================================
+  app.get("/api/health-records", async (req, res) => {
+    try {
+      const patientId = req.query.patientId as string | undefined;
+      const list = await db.getHealthRecords(patientId);
+      res.json(list);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/health-records", async (req, res) => {
+    try {
+      const saved = await db.saveHealthRecord(req.body);
+      res.status(201).json(saved);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.delete("/api/health-records/:id", async (req, res) => {
+    try {
+      await db.deleteHealthRecord(req.params.id);
+      res.json({ success: true });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // ==========================================
+  // CONSENT REQUESTS
+  // ==========================================
+  app.get("/api/consent-requests", async (req, res) => {
+    try {
+      const patientId = req.query.patientId as string | undefined;
+      const list = await db.getConsentRequests(patientId);
+      res.json(list);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/consent-requests", async (req, res) => {
+    try {
+      const saved = await db.saveConsentRequest(req.body);
+      res.status(201).json(saved);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.patch("/api/consent-requests/:id", async (req, res) => {
+    try {
+      const { status } = req.body;
+      const updated = await db.updateConsentStatus(req.params.id, status);
+      if (!updated) return res.status(404).json({ error: "Consent request not found" });
+      res.json(updated);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
     }
   });
 

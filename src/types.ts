@@ -50,4 +50,81 @@ export interface ConsentRequest {
   purpose: string;
   infoTypes: string[];
   status: 'PENDING' | 'GRANTED' | 'DENIED';
+  date?: string;
+  expiresIn?: string;
 }
+
+export interface Patient {
+  id: string;
+  name: string;
+  abhaId: string;
+  abhaNumber: string;
+  phone: string;
+  gender: string;
+  age: number;
+  dob: string;
+  bloodGroup: string;
+  address: string;
+  emergencyContact: string;
+}
+
+export interface ConsultationRecord {
+  id: string;
+  patientId?: string;
+  doctorId: string;
+  doctorName: string;
+  specialty: string;
+  clinicOrHospital: string;
+  date: string;
+  time: string;
+  status: 'Upcoming' | 'In Progress' | 'Completed' | 'Cancelled';
+  type: 'Online Video' | 'In-Clinic';
+  tokenNumber: number;
+  meetingLink?: string;
+  consultationNotes?: string;
+  prescriptionId?: string;
+}
+
+export interface MedicineItem {
+  name: string;
+  dosage: string;
+  frequency: string;
+  duration: string;
+  instructions: string;
+}
+
+export interface Prescription {
+  id: string;
+  patientId?: string;
+  doctorName: string;
+  doctorSpecialty: string;
+  doctorRegNo: string;
+  clinicOrHospital: string;
+  date: string;
+  diagnosis: string;
+  medicines: MedicineItem[];
+  advice: string;
+  followUpDate?: string;
+}
+
+export interface HealthRecordMetric {
+  label: string;
+  value: string;
+  unit?: string;
+  status: 'normal' | 'attention' | 'high';
+}
+
+export interface HealthRecordItem {
+  id: string;
+  patientId?: string;
+  title: string;
+  category: 'Diagnostic Lab Report' | 'Discharge Summary' | 'Immunization' | 'Prescription' | 'Radiology / Scan';
+  issuedBy: string;
+  date: string;
+  verified: boolean;
+  fileType: string;
+  summary: string;
+  doctorName?: string;
+  metrics?: HealthRecordMetric[];
+}
+

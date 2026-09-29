@@ -1,0 +1,11 @@
+{
+  "hospitals": [],
+  "doctors": [],
+  "blood_banks": [],
+  "patients": [],
+  "consultations": [],
+  "prescriptions": [],
+  "health_records": [],
+  "consent_requests": [],
+  "doctor_queues": {}
+}
